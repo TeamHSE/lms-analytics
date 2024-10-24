@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -126,6 +127,7 @@ app.MapPost(
 			Username = registration.Username,
 			UsernameNormalized = usernameNormalized,
 			PasswordHash = registration.Password,
+			Role = registration.Role,
 		};
 
 		// Hash the password
@@ -246,12 +248,52 @@ app.MapGet(
 				{
 					dbUser.Username,
 					dbUser.Email,
+					dbUser.Role,
 				});
 		})
 	.RequireAuthorization();
 
 app.MapGet("/ping", () => "pong")
 	.WithTags("Health");
+
+app.MapGet(
+	"/role",
+	() =>
+	{
+		return Results.Ok(
+			new
+			{
+				Role.Student,
+				Role.Teacher,
+				Role.Manager,
+				Role.Admin,
+			});
+	});
+
+app.MapGet(
+		"/student",
+		async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
+		{
+			var username = user.FindFirst(ClaimTypes.Name)?.Value;
+			var email = user.FindFirst(ClaimTypes.Email)?.Value;
+			var role = user.FindFirst(ClaimTypes.Role)?.Value;
+
+			var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.UsernameNormalized == username);
+
+			if (role != "Student" || dbUser is null || !dbUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+			{
+				return Results.NotFound();
+			}
+
+			return Results.Ok(
+				new
+				{
+					dbUser.Username,
+					dbUser.Email,
+					dbUser.Role,
+				});
+		})
+	.RequireAuthorization();
 
 Log.Information("Application started");
 

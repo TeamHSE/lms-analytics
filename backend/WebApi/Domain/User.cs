@@ -6,7 +6,7 @@ public class User
 {
 	public int Id { get; init; }
 
-	[MaxLength(255)]
+	[MaxLength(300)]
 	public required string Username { get; set; } = null!;
 
 	[MaxLength(255)]
@@ -18,4 +18,7 @@ public class User
 	[EmailAddress]
 	[MaxLength(255)]
 	public required string Email { get; set; } = null!;
+
+	[Range(1, 5)]
+	public required int Role { get; set; } = 0;
 }
