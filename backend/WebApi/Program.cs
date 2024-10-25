@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -82,6 +83,9 @@ builder.Services.AddAuthentication(
 		});
 builder.Services.AddAuthorization();
 
+builder.Services.AddAuthorizationBuilder().AddPolicy("admin_greetings", policy =>
+	policy.RequireRole(Role.Admin.ToString()));
+
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -126,6 +130,7 @@ app.MapPost(
 			Username = registration.Username,
 			UsernameNormalized = usernameNormalized,
 			PasswordHash = registration.Password,
+			Role = (Role)Enum.Parse(typeof(Role), registration.Role.ToString()),
 		};
 
 		// Hash the password
@@ -246,12 +251,23 @@ app.MapGet(
 				{
 					dbUser.Username,
 					dbUser.Email,
+					dbUser.Role,
 				});
 		})
 	.RequireAuthorization();
 
 app.MapGet("/ping", () => "pong")
 	.WithTags("Health");
+
+app.MapGet(
+	"/role",
+	() => Results.Ok(
+		new
+		{
+			Items = Enum.GetValues<Role>(),
+		}));
+
+app.MapGet("/admin", () => "admin is you").RequireAuthorization("admin_greetings");
 
 Log.Information("Application started");
 
