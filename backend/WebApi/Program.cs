@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -81,6 +82,9 @@ builder.Services.AddAuthentication(
 			};
 		});
 builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorizationBuilder().AddPolicy("admin_greetings", policy =>
+	policy.RequireRole(Role.Admin.ToString()));
 
 var app = builder.Build();
 
@@ -263,37 +267,7 @@ app.MapGet(
 			Items = Enum.GetValues<Role>(),
 		}));
 
-static async Task<IResult> GetUserInfo(AppDbContext dbContext, ClaimsPrincipal user, Role roleNumber)
-{
-	var username = user.FindFirst(ClaimTypes.Name)?.Value;
-	var email = user.FindFirst(ClaimTypes.Email)?.Value;
-
-	var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.UsernameNormalized == username);
-
-	if ((int)roleNumber != 4 || dbUser is null || !dbUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
-	{
-		return Results.NotFound();
-	}
-
-	return Results.Ok(new
-	{
-		dbUser.Username,
-		dbUser.Email,
-		dbUser.Role,
-	});
-}
-
-app.MapGet("/student", async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
-	{
-		return await GetUserInfo(dbContext, user, Role.Student);
-	})
-	.RequireAuthorization();
-
-app.MapGet("/admin", async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
-	{
-		return await GetUserInfo(dbContext, user, Role.Admin);
-	})
-	.RequireAuthorization();
+app.MapGet("/admin", () => "admin is you").RequireAuthorization("admin_greetings");
 
 Log.Information("Application started");
 
