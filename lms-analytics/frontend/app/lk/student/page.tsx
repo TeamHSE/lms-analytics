@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Layout, Table, Card, Progress, Row, Col } from "antd";
+import LogoutButton from "@/app/lk/LogoutButton";
 
 const { Content } = Layout;
 
@@ -32,8 +33,11 @@ export default function StudentPanel() {
 
     return (
             <Layout style={ { minHeight: "100vh" } }>
-                <Content style={ { padding: "24px" } }>
-                    <h1>Ученик: { studentName }</h1>
+                <Content style={ { padding: "24px", paddingRight: "1%" } }>
+                    <div style={ { display: "flex", alignItems: "center", width: "100%" } }>
+                        <h1 style={ { margin: "0", marginRight: "10px" } }>Ученик: { studentName }</h1>
+                        <LogoutButton position="relative" width="10%"/>
+                    </div>
                     <Row gutter={ [ 16, 16 ] }>
                         {/* Таблица с предметами и оценками */ }
                         <Col span={ 12 }>

@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import { Layout, List, Card, Progress, Button, Menu, Modal } from "antd";
+import { LogoutOutlined } from "@ant-design/icons";
+import { useRouter } from "next/navigation";
+import LogoutButton from "@/app/lk/LogoutButton";
 
 const { Sider, Content } = Layout;
 
@@ -56,7 +59,7 @@ export default function TeacherPanel() {
 
     return (
             <Layout style={ { minHeight: "100vh" } }>
-                <Sider width={ 300 } style={ { background: "#fff" } }>
+                <Sider width={ 300 } style={ { background: "#fff", justifyItems: "center" } }>
                     <h2 style={ { padding: "5px" } }>Группы студентов</h2>
                     <Menu mode="inline" defaultSelectedKeys={ [ "0" ] }>
                         { studentGroups.map((group) => (
@@ -65,6 +68,7 @@ export default function TeacherPanel() {
                                 </Menu.Item>
                         )) }
                     </Menu>
+                    <LogoutButton/>
                 </Sider>
                 <Layout>
                     <Content style={ { padding: "24px", paddingTop: "0" } }>

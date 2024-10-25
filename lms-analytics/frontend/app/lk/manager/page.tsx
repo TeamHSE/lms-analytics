@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Layout, Button, Tabs, Modal, Input, List } from "antd";
+import LogoutButton from "@/app/lk/LogoutButton";
 
 const { Content, Sider } = Layout;
 const { TabPane } = Tabs;
@@ -49,9 +50,10 @@ export default function ManagerPanel() {
 
     return (
             <Layout style={ { minHeight: "100vh" } }>
-                <Sider width={ 200 } className="site-layout-background" theme="light" collapsible={ true }>
+                <Sider width={ 200 } className="site-layout-background" theme="light">
                     <div className="p-4">
                         <h2>{ activeOrganization ? activeOrganization.name : "Организация не найдена" }</h2>
+                        <LogoutButton width="80%"/>
                     </div>
                 </Sider>
                 <Layout>
