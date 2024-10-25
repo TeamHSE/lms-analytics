@@ -19,6 +19,5 @@ public class User
 	[MaxLength(255)]
 	public required string Email { get; set; } = null!;
 
-	[Range(1, 5)]
-	public required int Role { get; set; } = 0;
+	public required Role Role { get; set; }
 }

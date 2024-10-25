@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -127,7 +126,7 @@ app.MapPost(
 			Username = registration.Username,
 			UsernameNormalized = usernameNormalized,
 			PasswordHash = registration.Password,
-			Role = registration.Role,
+			Role = (Role)Enum.Parse(typeof(Role), registration.Role.ToString()),
 		};
 
 		// Hash the password
@@ -258,41 +257,42 @@ app.MapGet("/ping", () => "pong")
 
 app.MapGet(
 	"/role",
-	() =>
-	{
-		return Results.Ok(
-			new
-			{
-				Role.Student,
-				Role.Teacher,
-				Role.Manager,
-				Role.Admin,
-			});
-	});
-
-app.MapGet(
-		"/student",
-		async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
+	() => Results.Ok(
+		new
 		{
-			var username = user.FindFirst(ClaimTypes.Name)?.Value;
-			var email = user.FindFirst(ClaimTypes.Email)?.Value;
-			var role = user.FindFirst(ClaimTypes.Role)?.Value;
+			Items = Enum.GetValues<Role>(),
+		}));
 
-			var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.UsernameNormalized == username);
+static async Task<IResult> GetUserInfo(AppDbContext dbContext, ClaimsPrincipal user, Role roleNumber)
+{
+	var username = user.FindFirst(ClaimTypes.Name)?.Value;
+	var email = user.FindFirst(ClaimTypes.Email)?.Value;
 
-			if (role != "Student" || dbUser is null || !dbUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
-			{
-				return Results.NotFound();
-			}
+	var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.UsernameNormalized == username);
 
-			return Results.Ok(
-				new
-				{
-					dbUser.Username,
-					dbUser.Email,
-					dbUser.Role,
-				});
-		})
+	if ((int)roleNumber != 4 || dbUser is null || !dbUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+	{
+		return Results.NotFound();
+	}
+
+	return Results.Ok(new
+	{
+		dbUser.Username,
+		dbUser.Email,
+		dbUser.Role,
+	});
+}
+
+app.MapGet("/student", async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
+	{
+		return await GetUserInfo(dbContext, user, Role.Student);
+	})
+	.RequireAuthorization();
+
+app.MapGet("/admin", async ([FromServices] AppDbContext dbContext, ClaimsPrincipal user) =>
+	{
+		return await GetUserInfo(dbContext, user, Role.Admin);
+	})
 	.RequireAuthorization();
 
 Log.Information("Application started");
