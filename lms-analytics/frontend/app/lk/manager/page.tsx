@@ -102,6 +102,7 @@ export default function ManagerPanel() {
                         open={ isModalVisible }
                         onOk={ handleAddPerson }
                         onCancel={ () => setIsModalVisible(false) }
+                        cancelText="Отмена"
                 >
                     <Input
                             placeholder={ `Имя ${ newType === "teacher" ? "преподавателя" : "студента" }` }
