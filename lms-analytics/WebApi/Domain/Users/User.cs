@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Domain;
+namespace WebApi.Domain.Users;
 
-public class Student
+public abstract class User
 {
 	public int Id { get; init; }
 

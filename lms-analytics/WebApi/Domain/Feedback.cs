@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WebApi.Domain.Users;
 
 namespace WebApi.Domain;
 
