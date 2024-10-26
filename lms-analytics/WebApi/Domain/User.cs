@@ -18,4 +18,8 @@ public class User
 	[EmailAddress]
 	[MaxLength(255)]
 	public required string Email { get; set; } = null!;
+
+	public List<Feedback> ReceivedFeedbacks { get; init; } = [];
+
+	public List<Feedback> SentFeedbacks { get; init; } = [];
 }
