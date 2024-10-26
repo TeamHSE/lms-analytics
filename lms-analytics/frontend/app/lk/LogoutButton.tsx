@@ -2,9 +2,10 @@ import React from "react";
 import { Button } from "antd";
 import { LogoutOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { CSSProperties } from "react";
 
 interface LogoutButtonProps {
-    position?: string | undefined,
+    position?: CSSProperties["position"],
     width?: string | undefined
 }
 

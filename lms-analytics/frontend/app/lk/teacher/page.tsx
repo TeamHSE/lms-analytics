@@ -6,33 +6,51 @@ import LogoutButton from "@/app/lk/LogoutButton";
 
 const { Sider, Content } = Layout;
 
-export default function TeacherPanel() {
-    const [ selectedGroup, setSelectedGroup ] = useState(null);
-    const [ isModalVisible, setIsModalVisible ] = useState(false);
-    const [ selectedStudent, setSelectedStudent ] = useState(null);
+interface StudentGroup {
+    id: number;
+    name: string;
+    students: string[];
+}
 
-    // Пример информации о преподавателе и организации
-    const teacherInfo = {
+interface TeacherInfo {
+    fullName: string;
+    organization: string;
+}
+
+interface GroupStats {
+    averageGrade: number;
+    assignmentsCompletedRate: number;
+    attendanceRate: number;
+}
+
+interface StudentStats {
+    grades: { subject: string; grade: number }[];
+    attendanceRate: number;
+}
+
+export default function TeacherPanel() {
+    const [ selectedGroup, setSelectedGroup ] = useState<StudentGroup | null>(null);
+    const [ isModalVisible, setIsModalVisible ] = useState<boolean>(false);
+    const [ selectedStudent, setSelectedStudent ] = useState<string | null>(null);
+
+    const teacherInfo: TeacherInfo = {
         fullName: "Иванов И.И.",
         organization: "Государственный университет",
     };
 
-    // Пример данных групп студентов
-    const studentGroups = [
+    const studentGroups: StudentGroup[] = [
         { id: 1, name: "Группа А", students: [ "Иванов И.И.", "Петров П.П.", "Сидоров С.С." ] },
         { id: 2, name: "Группа Б", students: [ "Алексеев А.А.", "Кузнецов К.К." ] },
         { id: 3, name: "Группа В", students: [ "Смирнова С.С.", "Романова Р.Р.", "Новиков Н.Н." ] },
     ];
 
-    // Пример данных успеваемости для выбранной группы
-    const groupStats = {
+    const groupStats: GroupStats = {
         averageGrade: 4.2,
         assignmentsCompletedRate: 85,
         attendanceRate: 92,
     };
 
-    // Пример статистики студента
-    const studentStats = {
+    const studentStats: StudentStats = {
         grades: [
             { subject: "Математика", grade: 4.5 },
             { subject: "Физика", grade: 3.8 },
@@ -45,7 +63,7 @@ export default function TeacherPanel() {
         console.log("Загрузка оценок...");
     };
 
-    const showModal = (student) => {
+    const showModal = (student: string) => {
         setSelectedStudent(student);
         setIsModalVisible(true);
     };
@@ -72,45 +90,33 @@ export default function TeacherPanel() {
                     <Content style={ { padding: "24px", paddingTop: "0" } }>
                         <h1>{ teacherInfo.organization }</h1>
                         <p>{ teacherInfo.fullName }</p>
-                        {/* Страница группы с аналитикой, статистикой и списком учеников */ }
                         { selectedGroup ? (
                                 <Card title={ `Статистика для ${ selectedGroup.name }` }>
                                     <p>Средняя оценка группы:</p>
                                     <Progress
                                             percent={ (groupStats.averageGrade / 5) * 100 }
                                             status="active"
-                                            format={ (percent) => `${ (percent * 5) / 100 }` }
+                                            format={ (percent) => `${ ((percent ?? 0) * 5) / 100 }` }
                                     />
                                     <p>Процент выполненных заданий:</p>
-                                    <Progress
-                                            percent={ groupStats.assignmentsCompletedRate }
-                                            status="active"
-                                    />
+                                    <Progress percent={ groupStats.assignmentsCompletedRate } status="active"/>
                                     <p>Процент посещаемости:</p>
-                                    <Progress
-                                            percent={ groupStats.attendanceRate }
-                                            status="active"
-                                            strokeColor="#52c41a"
-                                    />
+                                    <Progress percent={ groupStats.attendanceRate } status="active"
+                                              strokeColor="#52c41a"/>
                                     <Button
                                             type="primary"
                                             style={ { marginTop: "16px" } }
                                             onClick={ handleUploadGrades }
-                                            disabled={ selectedGroup.students.length === 0 } // Отключить кнопку, если
-                                            // нет учеников
+                                            disabled={ selectedGroup.students.length === 0 }
                                     >
                                         Загрузить оценки
                                     </Button>
-
-                                    {/* Список учеников */ }
                                     <Card title="Список учеников" style={ { marginTop: "16px" } }>
                                         <List
                                                 dataSource={ selectedGroup.students }
                                                 renderItem={ (student) => (
-                                                        <List.Item
-                                                                onClick={ () => showModal(student) }
-                                                                style={ { cursor: "pointer" } }
-                                                        >
+                                                        <List.Item onClick={ () => showModal(student) }
+                                                                   style={ { cursor: "pointer" } }>
                                                             { student }
                                                         </List.Item>
                                                 ) }
@@ -126,11 +132,9 @@ export default function TeacherPanel() {
                         ) }
                     </Content>
                 </Layout>
-
-                {/* Модальное окно со статистикой студента */ }
                 <Modal
                         title={ `${ selectedStudent } - Статистика` }
-                        visible={ isModalVisible }
+                        open={ isModalVisible }
                         onCancel={ handleModalClose }
                         footer={ null }
                 >

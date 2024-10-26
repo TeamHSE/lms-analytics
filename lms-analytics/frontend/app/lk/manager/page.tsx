@@ -7,9 +7,15 @@ import LogoutButton from "@/app/lk/LogoutButton";
 const { Content, Sider } = Layout;
 const { TabPane } = Tabs;
 
+interface Organization {
+    id: number;
+    name: string;
+    teachers: string[];
+    students: string[];
+}
+
 export default function ManagerPanel() {
-    // Пример данных организаций
-    const [ organizations ] = useState([
+    const [ organizations ] = useState<Organization[]>([
         {
             id: 1,
             name: "Университет А",
@@ -24,17 +30,15 @@ export default function ManagerPanel() {
         },
     ]);
 
-    // ID организации менеджера
-    const managerOrgId = 1; // Здесь можно подставить динамическое значение после аутентификации
-    const [ activeOrganization, setActiveOrganization ] = useState(null);
-    const [ isModalVisible, setIsModalVisible ] = useState(false);
-    const [ newName, setNewName ] = useState("");
-    const [ newType, setNewType ] = useState("teacher");
+    const managerOrgId = 1;
+    const [ activeOrganization, setActiveOrganization ] = useState<Organization | null>(null);
+    const [ isModalVisible, setIsModalVisible ] = useState<boolean>(false);
+    const [ newName, setNewName ] = useState<string>("");
+    const [ newType, setNewType ] = useState<"teacher" | "student">("teacher");
 
     useEffect(() => {
-        // Установим активную организацию, если ID совпадает с ID организации менеджера
         const organization = organizations.find((org) => org.id === managerOrgId);
-        setActiveOrganization(organization);
+        setActiveOrganization(organization ?? null);
     }, [ organizations ]);
 
     const handleAddPerson = () => {
@@ -95,7 +99,7 @@ export default function ManagerPanel() {
 
                 <Modal
                         title={ `Добавить нового ${ newType === "teacher" ? "преподавателя" : "студента" }` }
-                        visible={ isModalVisible }
+                        open={ isModalVisible }
                         onOk={ handleAddPerson }
                         onCancel={ () => setIsModalVisible(false) }
                 >

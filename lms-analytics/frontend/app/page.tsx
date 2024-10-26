@@ -5,15 +5,17 @@ import { Tabs, Button, Card } from "antd";
 import styles from "./login.module.css";
 import { useRouter } from "next/navigation";
 
+type TabKey = "admin" | "teacher" | "student" | "manager";
+
 export default function Home() {
-    const [ activeTab, setActiveTab ] = useState("admin");
+    const [ activeTab, setActiveTab ] = useState<TabKey>("admin");
     const { push } = useRouter();
 
     const handleTabChange = (key: string) => {
-        setActiveTab(key);
+        setActiveTab(key as TabKey);
     };
 
-    const redirects = {
+    const redirects: Record<TabKey, string> = {
         admin: "/lk/admin",
         teacher: "/lk/teacher",
         student: "/lk/student",
