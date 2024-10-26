@@ -15,6 +15,7 @@ using Serilog;
 using WebApi;
 using WebApi.Database;
 using WebApi.Domain;
+using WebApi.Feedbacks;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -252,6 +253,8 @@ app.MapGet(
 
 app.MapGet("/ping", () => "pong")
 	.WithTags("Health");
+
+app.MapFeedbacks();
 
 Log.Information("Application started");
 
