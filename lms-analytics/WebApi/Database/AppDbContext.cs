@@ -1,28 +1,21 @@
 using Microsoft.EntityFrameworkCore;
-using WebApi.Domain;
+using WebApi.Features;
+using WebApi.Features.Feedbacks;
+using WebApi.Features.Users;
 
 namespace WebApi.Database;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-	public DbSet<User> Users { get; init; }
+	public DbSet<Company> Companies { get; init; } = null!;
 
-	public DbSet<Feedback> Feedbacks { get; init; }
+	public DbSet<Manager> Managers { get; init; } = null!;
 
-	protected override void OnModelCreating(ModelBuilder modelBuilder)
-	{
-		modelBuilder.Entity<User>()
-			.HasMany(user => user.ReceivedFeedbacks)
-			.WithOne(feedback => feedback.Receiver)
-			.HasForeignKey(feedback => feedback.ReceiverId)
-			.OnDelete(DeleteBehavior.Cascade);
+	public DbSet<Teacher> Teachers { get; init; } = null!;
 
-		modelBuilder.Entity<User>()
-			.HasMany(user => user.SentFeedbacks)
-			.WithOne(feedback => feedback.Sender)
-			.HasForeignKey(feedback => feedback.SenderId)
-			.OnDelete(DeleteBehavior.Cascade);
+	public DbSet<StudyGroup> StudyGroups { get; init; } = null!;
 
-		base.OnModelCreating(modelBuilder);
-	}
+	public DbSet<Student> Students { get; init; } = null!;
+
+	public DbSet<Feedback> Feedbacks { get; init; } = null!;
 }

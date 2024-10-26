@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Domain;
+namespace WebApi.Features.Feedbacks;
 
 public class Feedback
 {
@@ -15,7 +15,7 @@ public class Feedback
 
 	public required DateTimeOffset CreatedAt { get; init; }
 
-	public User Sender { get; init; } = null!;
+	public required FeedbackPersonType SenderType { get; init; }
 
-	public User Receiver { get; init; } = null!;
+	public required FeedbackPersonType ReceiverType { get; init; }
 }
