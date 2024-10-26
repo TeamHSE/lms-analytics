@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Domain;
+namespace WebApi.Features;
 
 public class StudyGroup
 {

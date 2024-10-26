@@ -1,19 +1,21 @@
 using Microsoft.EntityFrameworkCore;
-using WebApi.Domain;
+using WebApi.Features;
+using WebApi.Features.Feedbacks;
+using WebApi.Features.Users;
 
 namespace WebApi.Database;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options, DbSet<Feedback> feedbacks) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-	public DbSet<Company> Companies { get; set; } = null!;
+	public DbSet<Company> Companies { get; init; } = null!;
 
-	public DbSet<Manager> Managers { get; set; } = null!;
+	public DbSet<Manager> Managers { get; init; } = null!;
 
-	public DbSet<Teacher> Teachers { get; set; } = null!;
+	public DbSet<Teacher> Teachers { get; init; } = null!;
 
-	public DbSet<StudyGroup> StudyGroups { get; set; } = null!;
+	public DbSet<StudyGroup> StudyGroups { get; init; } = null!;
 
-	public DbSet<Student> Students { get; set; } = null!;
+	public DbSet<Student> Students { get; init; } = null!;
 
-	public DbSet<Feedback> Feedbacks { get; init; } = feedbacks;
+	public DbSet<Feedback> Feedbacks { get; init; } = null!;
 }

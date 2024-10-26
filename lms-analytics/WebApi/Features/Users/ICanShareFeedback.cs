@@ -1,4 +1,6 @@
-namespace WebApi.Domain.Users;
+using WebApi.Features.Feedbacks;
+
+namespace WebApi.Features.Users;
 
 public interface ICanShareFeedback
 {

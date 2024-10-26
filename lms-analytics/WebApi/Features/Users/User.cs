@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Domain.Users;
+namespace WebApi.Features.Users;
 
 public abstract class User
 {

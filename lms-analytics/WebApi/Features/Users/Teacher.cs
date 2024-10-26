@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using WebApi.Features.Feedbacks;
 
-namespace WebApi.Domain.Users;
+namespace WebApi.Features.Users;
 
-public class Student : User, ICanShareFeedback
+public class Teacher : User, ICanShareFeedback
 {
 	public List<Feedback> ReceivedFeedbacks { get; init; } = null!;
 
