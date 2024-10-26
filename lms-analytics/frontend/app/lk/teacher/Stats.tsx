@@ -97,6 +97,7 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
                         open={ isModalVisible }
                         onCancel={ handleModalClose }
                         footer={ null }
+                        cancelText="Отмена"
                 >
                     <h3>Оценки:</h3>
                     <List
