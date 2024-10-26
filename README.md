@@ -1,3 +1,5 @@
+[![.NET](https://github.com/TeamHSE/lms-analytics/actions/workflows/dotnet.yml/badge.svg)](https://github.com/TeamHSE/lms-analytics/actions/workflows/dotnet.yml)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/5fccdb9a-c6dd-479c-9d92-d6d87706588d/deploy-status)](https://app.netlify.com/sites/lms-analytics/deploys)
 # LMS Analytics
 ## Краткое описание
 **Платформа для школьников и студентов на data-driven
