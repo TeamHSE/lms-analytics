@@ -73,7 +73,7 @@ const FeedbackPage = () => {
                     </TabPane>
                     <TabPane tab="Кросс-оценка" key={ 3 }>
                         <List
-                                header={ <div>Обратная связь от других ребят</div> }
+                                header={ <div>Обратная связь другим ребятам</div> }
                                 bordered
                                 dataSource={ peerFeedback }
                                 renderItem={ item => (
@@ -85,15 +85,15 @@ const FeedbackPage = () => {
                     </TabPane>
                 </Tabs>
                 <Button type="primary" onClick={ () => setIsModalVisible(true) } style={ { top: "1%" } }>
-                    Send Feedback
+                    Отправить обратную связь
                 </Button>
                 <Modal
                         title="Отправить обратную связь"
                         open={ isModalVisible }
                         onCancel={ () => setIsModalVisible(false) }
                         onOk={ () => handleSendFeedback() }
-                        okText="Send"
-                        cancelText="Cancel"
+                        okText="Отправить"
+                        cancelText="Отмена"
                 >
                     <Input.TextArea
                             rows={ 4 }
