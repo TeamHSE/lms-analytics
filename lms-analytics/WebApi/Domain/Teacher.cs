@@ -2,7 +2,7 @@
 
 namespace WebApi.Domain;
 
-public class Lecturer
+public class Teacher
 {
 	public int Id { get; init; }
 
