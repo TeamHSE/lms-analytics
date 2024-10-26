@@ -23,7 +23,8 @@ export default function AdminPanel() {
             disciplines: ["Химия", "Биология"],
         },
     ]);
-    const [activeOrganization, setActiveOrganization] = useState(null);
+
+    const [activeOrganization, setActiveOrganization] = useState(-1);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [newOrgName, setNewOrgName] = useState("");
 
@@ -38,7 +39,7 @@ export default function AdminPanel() {
         }
     };
 
-    const handleSelectOrganization = (index) => {
+    const handleSelectOrganization = (index: number) => {
         setActiveOrganization(index);
     };
 
@@ -100,7 +101,7 @@ export default function AdminPanel() {
 
                 <Modal
                         title="Добавить новую организацию"
-                        visible={isModalVisible}
+                        open={isModalVisible}
                         onOk={handleAddOrganization}
                         onCancel={() => setIsModalVisible(false)}
                 >

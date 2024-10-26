@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import { Layout, List, Card, Progress, Button, Menu, Modal } from "antd";
-import { LogoutOutlined } from "@ant-design/icons";
-import { useRouter } from "next/navigation";
 import LogoutButton from "@/app/lk/LogoutButton";
 
 const { Sider, Content } = Layout;
