@@ -111,6 +111,7 @@ export default function AdminPanel() {
                         open={ isModalVisible }
                         onOk={ handleAddOrganization }
                         onCancel={ () => setIsModalVisible(false) }
+                        cancelText="Отмена"
                 >
                     <Input
                             placeholder="Название организации"
