@@ -28,11 +28,6 @@ export default function Home() {
 
     const tabItems = [
         {
-            key: "admin",
-            label: "Администратор",
-            children: <Button type="primary" onClick={ handleLogin }>Войти как Администратор</Button>,
-        },
-        {
             key: "teacher",
             label: "Преподаватель",
             children: <Button type="primary" onClick={ handleLogin }>Войти как Преподаватель</Button>,
@@ -46,6 +41,11 @@ export default function Home() {
             key: "manager",
             label: "Менеджер",
             children: <Button type="primary" onClick={ handleLogin }>Войти как Менеджер</Button>,
+        },
+        {
+            key: "admin",
+            label: "Администратор",
+            children: <Button type="primary" onClick={ handleLogin }>Войти как Администратор</Button>,
         },
     ];
 
