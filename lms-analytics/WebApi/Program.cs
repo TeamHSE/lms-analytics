@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using WebApi.Database;
+using WebApi.Features.AnalyticsData;
 using WebApi.Features.Feedbacks;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,11 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/ping", () => "pong")
 	.WithTags("Health");
 
-app.MapFeedbacks();
+Endpoints.MapFeedbacks(app);
+CompaniesEndpoints.MapData(app);
+StudentsEndpoints.MapData(app);
+StudentGroupsEndpoints.MapData(app);
+TeachersEndpoints.MapData(app);
 
 Log.Information("Application started");
 
