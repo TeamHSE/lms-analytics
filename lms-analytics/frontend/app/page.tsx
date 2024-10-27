@@ -52,6 +52,8 @@ export default function Home() {
     return (
             <div className={ styles.container }>
                 <Card className={ styles.card } title="Вход">
+                    <h1>LMS Analytics</h1>
+                    <h3>Платформа для школьников и студентов на data-driven подходе</h3>
                     <Tabs defaultActiveKey="admin" onChange={ handleTabChange } items={ tabItems }/>
                 </Card>
             </div>
