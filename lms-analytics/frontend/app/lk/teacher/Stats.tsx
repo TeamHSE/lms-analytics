@@ -21,11 +21,6 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
         { subject: "География", averageGrade: 4.1 },
     ]);
 
-    const teacherInfo: TeacherInfo = {
-        fullName: "Иванов И.И.",
-        organization: "Государственный университет",
-    };
-
     const [ groupStats, setGroupStats ] = useState<GroupStats>({
         averageGrade: 4.2,
         assignmentsCompletedRate: 85,
@@ -77,8 +72,6 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
 
     return (
             <>
-                <h1>{ teacherInfo.organization }</h1>
-                <p>{ teacherInfo.fullName }</p>
                 { selectedGroup ? (
                         <Card title={ `Статистика для ${ selectedGroup.name }` }>
                             <p>Средняя оценка группы:</p>
