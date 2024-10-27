@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 type TabKey = "admin" | "teacher" | "student" | "manager";
 
 export default function Home() {
-    const [ activeTab, setActiveTab ] = useState<TabKey>("admin");
+    const [ activeTab, setActiveTab ] = useState<TabKey>("teacher");
     const { push } = useRouter();
 
     const handleTabChange = (key: string) => {
