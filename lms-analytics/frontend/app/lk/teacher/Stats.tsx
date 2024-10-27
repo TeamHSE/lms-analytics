@@ -26,14 +26,14 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
         organization: "Государственный университет",
     };
 
-    const groupStats: GroupStats = {
+    const [ groupStats, setGroupStats ] = useState<GroupStats>({
         averageGrade: 4.2,
         assignmentsCompletedRate: 85,
         attendanceRate: 92,
-    };
+    });
 
     const handleUploadGrades = () => {
-        console.log("Загрузка оценок...");
+        handleDateChange();
     };
 
     const showModal = (student: string) => {
@@ -52,6 +52,11 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
             averageGrade: Math.random() * 5,
         }));
         setBarChartData(newBarChartData);
+        setGroupStats({
+            averageGrade: Math.random() * 5,
+            assignmentsCompletedRate: Math.random() * 100,
+            attendanceRate: Math.random() * 100,
+        });
     };
 
     // noinspection NonAsciiCharacters
