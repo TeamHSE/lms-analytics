@@ -22,9 +22,9 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
     ]);
 
     const [ groupStats, setGroupStats ] = useState<GroupStats>({
-        averageGrade: 4.2,
-        assignmentsCompletedRate: 85,
-        attendanceRate: 92,
+        averageGrade: Math.random() * 5,
+        assignmentsCompletedRate: Math.random() * 100,
+        attendanceRate: Math.random() * 100,
     });
 
     const handleUploadGrades = () => {
