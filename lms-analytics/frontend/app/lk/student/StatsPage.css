@@ -1,0 +1,15 @@
+.card-grid {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.custom-card {
+	flex: 1;
+	margin: 8px;
+	min-width: 300px;
+	max-width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
