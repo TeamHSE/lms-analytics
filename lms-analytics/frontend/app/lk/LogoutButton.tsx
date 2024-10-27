@@ -6,10 +6,11 @@ import { CSSProperties } from "react";
 
 interface LogoutButtonProps {
     position?: CSSProperties["position"],
-    width?: string | undefined
+    margin?: CSSProperties["margin"],
+    width?: CSSProperties["width"],
 }
 
-const LogoutButton = ({ position, width }: LogoutButtonProps) => {
+const LogoutButton = ({ position, width, margin }: LogoutButtonProps) => {
     const router = useRouter(); // Используйте useRouter для навигации
 
     // Функция выхода
@@ -22,7 +23,7 @@ const LogoutButton = ({ position, width }: LogoutButtonProps) => {
         <Button
                 type="dashed"
                 style={ {
-                    margin: "16px",
+                    margin: margin ?? "16px",
                     width: width ?? "80%",
                     position: position ?? "absolute",
                     bottom: 0,
