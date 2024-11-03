@@ -14,6 +14,9 @@ public static class CompaniesEndpoints
 
 		api.MapGet("data", GetDataCompanies);
 		api.MapPost("add", AddCompany);
+		api.MapPost("get", GetCompanyById);
+		api.MapPut("update", UpdateCompany);
+		api.MapDelete("delete", DeleteCompany);
 	}
 
 	/// <summary>
@@ -48,6 +51,56 @@ public static class CompaniesEndpoints
 		await dbContext.SaveChangesAsync();
 
 		return Results.Created($"/companies/{companyToAdd.Id}", companyToAdd);
+	}
+
+	private static async Task<IResult> GetCompanyById([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var company = await dbContext.Companies.FindAsync(id);
+
+		if (company is null)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(company);
+	}
+
+	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromBody] Company companyUpdate)
+	{
+		var company = await dbContext.Companies.FindAsync(companyUpdate.Id);
+
+		if (company == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Entry(company).CurrentValues.SetValues(companyUpdate);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(company);
+	}
+
+	private static async Task<IResult> DeleteCompany([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var company = await dbContext.Companies.FindAsync(id);
+
+		if (company == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Remove(company);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(company);
+	}
+
+	private static async Task<IResult> CreateCompany([FromServices] AppDbContext dbContext, [FromBody] Company company)
+	{
+		dbContext.Companies.Add(company);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(company);
 	}
 
 	/// <summary>
