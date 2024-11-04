@@ -12,11 +12,11 @@ public static class CompaniesEndpoints
 		var api = app.MapGroup("companies")
 			.WithTags("Компании");
 
-		api.MapGet("data", GetDataCompanies);
-		api.MapPost("add", AddCompany);
-		api.MapPost("get", GetCompanyById);
-		api.MapPut("update", UpdateCompany);
-		api.MapDelete("delete", DeleteCompany);
+		api.MapGet("/", GetDataCompanies);
+		api.MapPost("/", AddCompany);
+		api.MapGet("{id:int}", GetCompanyById);
+		api.MapPut("/", UpdateCompany);
+		api.MapDelete("/", DeleteCompany);
 	}
 
 	/// <summary>
@@ -58,7 +58,7 @@ public static class CompaniesEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id компании, чтобы получить её данные</param>
-	private static async Task<IResult> GetCompanyById([FromServices] AppDbContext dbContext, [FromBody] int id)
+	private static async Task<IResult> GetCompanyById([FromServices] AppDbContext dbContext, [FromRoute] int id)
 	{
 		var company = await dbContext.Companies.FindAsync(id);
 
@@ -71,7 +71,7 @@ public static class CompaniesEndpoints
 	}
 
 	/// <summary>
-	/// Обновление данных старой компании, через Id и данные новой компании
+	/// Обновление данных компании, через Id и новые данные
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="companyUpdate">Компания с данными для обновления</param>

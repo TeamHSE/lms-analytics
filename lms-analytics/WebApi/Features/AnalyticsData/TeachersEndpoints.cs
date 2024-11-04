@@ -13,8 +13,11 @@ public static class TeachersEndpoints
 		var api = app.MapGroup("teachers")
 			.WithTags("Преподаватели");
 
-		api.MapGet("data", GetDataTeachers);
-		api.MapPost("add", AddTeacher);
+		api.MapGet("/", GetDataTeachers);
+		api.MapPost("/", AddTeacher);
+		api.MapGet("{id:int}", GetTeacherById);
+		api.MapPut("{id:int}", UpdateTeacher);
+		api.MapDelete("/", DeleteTeacher);
 	}
 
 	/// <summary>
@@ -48,7 +51,7 @@ public static class TeachersEndpoints
 							  string.IsNullOrWhiteSpace(teacherToAdd.Lastname) &&
 							  string.IsNullOrWhiteSpace(teacherToAdd.Email);
 
-		if (teacherToAdd == null || isValidStudent)
+		if (isValidStudent)
 		{
 			return Results.BadRequest("Invalid teacher data");
 		}
@@ -57,6 +60,64 @@ public static class TeachersEndpoints
 		await dbContext.SaveChangesAsync();
 
 		return Results.Created($"/teachers/{teacherToAdd.Id}", teacherToAdd);
+	}
+
+	/// <summary>
+	/// Получение данных о преподавателе через Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя, чтобы получить её данные</param>
+	private static async Task<IResult> GetTeacherById([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher is null)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(teacher);
+	}
+
+	/// <summary>
+	/// Обновление данных преподавателя, через Id и новые данные
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя</param>
+	/// <param name="request">Преподаватель с данными для обновления</param>
+	private static async Task<IResult> UpdateTeacher([FromServices] AppDbContext dbContext, [FromRoute] int id, SendTeacherRequest request)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Entry(teacher).CurrentValues.SetValues(request);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(teacher);
+	}
+
+	/// <summary>
+	/// Удаление преподавателя из БД по Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя, чтобы удалить её</param>
+	private static async Task<IResult> DeleteTeacher([FromServices] AppDbContext dbContext, [FromBody] int id)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Remove(teacher);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
 	}
 
 	/// <summary>
