@@ -31,7 +31,7 @@ public static class CompaniesEndpoints
 	}
 
 	/// <summary>
-	/// Получение данных таблицы Компаний в виде списка
+	/// Добавление компании в БД
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями компании</param>
@@ -42,7 +42,7 @@ public static class CompaniesEndpoints
 			Companyname = request.CompanyName,
 		};
 
-		if (companyToAdd == null || string.IsNullOrWhiteSpace(companyToAdd.Companyname))
+		if (string.IsNullOrWhiteSpace(companyToAdd.Companyname))
 		{
 			return Results.BadRequest("Invalid company data");
 		}
@@ -53,7 +53,12 @@ public static class CompaniesEndpoints
 		return Results.Created($"/companies/{companyToAdd.Id}", companyToAdd);
 	}
 
-	private static async Task<IResult> GetCompanyById([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	/// <summary>
+	/// Получение данных о компании через Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id компании, чтобы получить её данные</param>
+	private static async Task<IResult> GetCompanyById([FromServices] AppDbContext dbContext, [FromBody] int id)
 	{
 		var company = await dbContext.Companies.FindAsync(id);
 
@@ -65,6 +70,11 @@ public static class CompaniesEndpoints
 		return Results.Ok(company);
 	}
 
+	/// <summary>
+	/// Обновление данных старой компании, через Id и данные новой компании
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="companyUpdate">Компания с данными для обновления</param>
 	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromBody] Company companyUpdate)
 	{
 		var company = await dbContext.Companies.FindAsync(companyUpdate.Id);
@@ -80,7 +90,12 @@ public static class CompaniesEndpoints
 		return Results.Ok(company);
 	}
 
-	private static async Task<IResult> DeleteCompany([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	/// <summary>
+	/// Удаление компании из БД по Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id компании, чтобы удалить её</param>
+	private static async Task<IResult> DeleteCompany([FromServices] AppDbContext dbContext, [FromBody] int id)
 	{
 		var company = await dbContext.Companies.FindAsync(id);
 
@@ -92,15 +107,7 @@ public static class CompaniesEndpoints
 		dbContext.Remove(company);
 		await dbContext.SaveChangesAsync();
 
-		return Results.Ok(company);
-	}
-
-	private static async Task<IResult> CreateCompany([FromServices] AppDbContext dbContext, [FromBody] Company company)
-	{
-		dbContext.Companies.Add(company);
-		await dbContext.SaveChangesAsync();
-
-		return Results.Ok(company);
+		return Results.NoContent();
 	}
 
 	/// <summary>
