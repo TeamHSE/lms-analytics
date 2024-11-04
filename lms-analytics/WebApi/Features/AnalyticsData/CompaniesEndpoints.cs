@@ -15,8 +15,8 @@ public static class CompaniesEndpoints
 		api.MapGet("/", GetDataCompanies);
 		api.MapPost("/", AddCompany);
 		api.MapGet("{id:int}", GetCompanyById);
-		api.MapPut("/", UpdateCompany);
-		api.MapDelete("/", DeleteCompany);
+		api.MapPut("{id:int}", UpdateCompany);
+		api.MapDelete("{id:int}", DeleteCompany);
 	}
 
 	/// <summary>
@@ -74,17 +74,18 @@ public static class CompaniesEndpoints
 	/// Обновление данных компании, через Id и новые данные
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
-	/// <param name="companyUpdate">Компания с данными для обновления</param>
-	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromBody] Company companyUpdate)
+	/// <param name="id">Id Компании</param>
+	/// <param name="request">Компания с данными для обновления</param>
+	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] SendCompanyRequest request)
 	{
-		var company = await dbContext.Companies.FindAsync(companyUpdate.Id);
+		var company = await dbContext.Companies.FindAsync(id);
 
 		if (company == null)
 		{
 			return Results.NotFound();
 		}
 
-		dbContext.Entry(company).CurrentValues.SetValues(companyUpdate);
+		dbContext.Entry(company).CurrentValues.SetValues(request);
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(company);
@@ -95,7 +96,7 @@ public static class CompaniesEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id компании, чтобы удалить её</param>
-	private static async Task<IResult> DeleteCompany([FromServices] AppDbContext dbContext, [FromBody] int id)
+	private static async Task<IResult> DeleteCompany([FromServices] AppDbContext dbContext, [FromRoute] int id)
 	{
 		var company = await dbContext.Companies.FindAsync(id);
 

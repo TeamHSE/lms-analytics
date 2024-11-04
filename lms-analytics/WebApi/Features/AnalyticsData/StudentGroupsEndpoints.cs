@@ -15,8 +15,8 @@ public static class StudentGroupsEndpoints
 		api.MapGet("/", GetDataGroup);
 		api.MapPost("/", AddGroup);
 		api.MapGet("{id:int}", GetGroupById);
-		api.MapPut("/", UpdateGroup);
-		api.MapDelete("/", DeleteGroup);
+		api.MapPut("{id:int}", UpdateGroup);
+		api.MapDelete("{id:int}", DeleteGroup);
 	}
 
 	/// <summary>
@@ -79,17 +79,18 @@ public static class StudentGroupsEndpoints
 	/// Обновление данных учебной группы, через Id и новые данные
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
-	/// <param name="groupUpdate">Учебная группа с данными для обновления</param>
-	private static async Task<IResult> UpdateGroup([FromServices] AppDbContext dbContext, [FromBody] StudyGroup groupUpdate)
+	/// <param name="id">Id учебной группы</param>
+	/// <param name="request">Учебная группа с данными для обновления</param>
+	private static async Task<IResult> UpdateGroup([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] SendGroupRequest request)
 	{
-		var group = await dbContext.StudyGroups.FindAsync(groupUpdate.Id);
+		var group = await dbContext.StudyGroups.FindAsync(id);
 
 		if (group == null)
 		{
 			return Results.NotFound();
 		}
 
-		dbContext.Entry(group).CurrentValues.SetValues(groupUpdate);
+		dbContext.Entry(group).CurrentValues.SetValues(request);
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(group);
@@ -100,7 +101,7 @@ public static class StudentGroupsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id учебной группы, чтобы удалить её</param>
-	private static async Task<IResult> DeleteGroup([FromServices] AppDbContext dbContext, [FromBody] int id)
+	private static async Task<IResult> DeleteGroup([FromServices] AppDbContext dbContext, [FromRoute] int id)
 	{
 		var group = await dbContext.StudyGroups.FindAsync(id);
 

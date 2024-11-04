@@ -17,7 +17,7 @@ public static class StudentsEndpoints
 		api.MapPost("/", AddStudent);
 		api.MapGet("{id:int}", GetStudentById);
 		api.MapPut("{id:int}", UpdateStudent);
-		api.MapDelete("/", DeleteStudent);
+		api.MapDelete("{id:int}", DeleteStudent);
 	}
 
 	/// <summary>
@@ -105,7 +105,7 @@ public static class StudentsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id студента, чтобы удалить её</param>
-	private static async Task<IResult> DeleteStudent([FromServices] AppDbContext dbContext, [FromBody] int id)
+	private static async Task<IResult> DeleteStudent([FromServices] AppDbContext dbContext, [FromRoute] int id)
 	{
 		var student = await dbContext.Students.FindAsync(id);
 
