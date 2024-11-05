@@ -17,7 +17,20 @@ builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.C
 SetupDb(builder);
 SetupLogging(builder);
 
+const string corsPolicyName = "uiPolicy";
+
+builder.Services.AddCors(
+	options => options.AddPolicy(
+		name: corsPolicyName,
+		policyBuilder => policyBuilder
+			.WithOrigins("http://localhost:3000")
+			.AllowCredentials()
+			.AllowAnyMethod()
+			.AllowAnyHeader()));
+
 var app = builder.Build();
+
+app.UseCors(corsPolicyName);
 
 app.UseSerilogRequestLogging();
 
