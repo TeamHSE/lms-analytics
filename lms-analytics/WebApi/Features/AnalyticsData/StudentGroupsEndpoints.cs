@@ -90,7 +90,9 @@ public static class StudentGroupsEndpoints
 			return Results.NotFound();
 		}
 
-		dbContext.Entry(group).CurrentValues.SetValues(request);
+		group.Program = request.Program;
+		group.AdmissionYear = request.AdmissionYear;
+		group.GroupNumber = request.GroupNumber;
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(group);

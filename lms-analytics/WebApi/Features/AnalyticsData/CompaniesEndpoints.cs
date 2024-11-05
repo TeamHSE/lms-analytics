@@ -85,7 +85,7 @@ public static class CompaniesEndpoints
 			return Results.NotFound();
 		}
 
-		dbContext.Entry(company).CurrentValues.SetValues(request);
+		company.Companyname = request.CompanyName;
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(company);

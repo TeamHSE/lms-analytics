@@ -94,7 +94,10 @@ public static class StudentsEndpoints
 			return Results.NotFound();
 		}
 
-		dbContext.Entry(student).CurrentValues.SetValues(request);
+		student.Name = request.Name;
+		student.Surname = request.Surname;
+		student.Lastname = request.Lastname;
+		student.Email = request.Email;
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(student);
