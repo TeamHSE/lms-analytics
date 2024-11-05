@@ -35,7 +35,7 @@ public static class CompaniesEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями компании</param>
-	private static async Task<IResult> AddCompany([FromServices] AppDbContext dbContext, SendCompanyRequest request)
+	private static async Task<IResult> AddCompany([FromServices] AppDbContext dbContext, CompanyRequest request)
 	{
 		Company companyToAdd = new()
 		{
@@ -76,7 +76,7 @@ public static class CompaniesEndpoints
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id Компании</param>
 	/// <param name="request">Компания с данными для обновления</param>
-	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] SendCompanyRequest request)
+	private static async Task<IResult> UpdateCompany([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] CompanyRequest request)
 	{
 		var company = await dbContext.Companies.FindAsync(id);
 
@@ -115,5 +115,5 @@ public static class CompaniesEndpoints
 	/// Request body
 	/// </summary>
 	/// <param name="CompanyName">Название компании</param>
-	private sealed record SendCompanyRequest([MaxLength(255)] string CompanyName);
+	private sealed record CompanyRequest([MaxLength(255)] string CompanyName);
 }

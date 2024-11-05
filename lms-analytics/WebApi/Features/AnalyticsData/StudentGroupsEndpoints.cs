@@ -35,7 +35,7 @@ public static class StudentGroupsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями учебной группы</param>
-	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, SendGroupRequest request)
+	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, GroupRequest request)
 	{
 		StudyGroup groupToAdd = new()
 		{
@@ -81,7 +81,7 @@ public static class StudentGroupsEndpoints
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id учебной группы</param>
 	/// <param name="request">Учебная группа с данными для обновления</param>
-	private static async Task<IResult> UpdateGroup([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] SendGroupRequest request)
+	private static async Task<IResult> UpdateGroup([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] GroupRequest request)
 	{
 		var group = await dbContext.StudyGroups.FindAsync(id);
 
@@ -124,5 +124,5 @@ public static class StudentGroupsEndpoints
 	/// <param name="Program">Название учебной программы</param>
 	/// <param name="AdmissionYear">Год набора группы на программу</param>
 	/// <param name="GroupNumber">Номер группы</param>
-	private sealed record SendGroupRequest([MaxLength(255)] string Program, int AdmissionYear, int GroupNumber);
+	private sealed record GroupRequest([MaxLength(255)] string Program, int AdmissionYear, int GroupNumber);
 }

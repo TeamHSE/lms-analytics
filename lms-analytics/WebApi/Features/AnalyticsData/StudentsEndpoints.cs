@@ -36,7 +36,7 @@ public static class StudentsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями студента</param>
-	private static async Task<IResult> AddStudent([FromServices] AppDbContext dbContext, SendStudentRequest request)
+	private static async Task<IResult> AddStudent([FromServices] AppDbContext dbContext, StudentRequest request)
 	{
 		Student studentToAdd = new()
 		{
@@ -85,7 +85,7 @@ public static class StudentsEndpoints
 	/// <param name="dbContext">База данных</param>
 	/// <param name="id">Id студента</param>
 	/// <param name="request">Студент с данными для обновления</param>
-	private static async Task<IResult> UpdateStudent([FromServices] AppDbContext dbContext, [FromRoute] int id, SendStudentRequest request)
+	private static async Task<IResult> UpdateStudent([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] StudentRequest request)
 	{
 		var student = await dbContext.Students.FindAsync(id);
 
@@ -130,5 +130,5 @@ public static class StudentsEndpoints
 	/// <param name="Surname">Фамилия студента</param>
 	/// <param name="Lastname">Отчество студента</param>
 	/// <param name="Email">Почта студента</param>
-	private sealed record SendStudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string Lastname, [MaxLength(255)] string Email);
+	private sealed record StudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string Lastname, [MaxLength(255)] string Email);
 }
