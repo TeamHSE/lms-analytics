@@ -20,4 +20,14 @@ public class Teacher : User, ICanShareFeedback
 	public List<Feedback> ReceivedFeedbacks { get; init; } = null!;
 
 	public List<Feedback> SentFeedbacks { get; init; } = null!;
+
+	public void AssignDiscipline(Discipline discipline)
+	{
+		Disciplines.Add(discipline);
+	}
+
+	public void Unassign(Discipline discipline)
+	{
+		Disciplines.Remove(discipline);
+	}
 }

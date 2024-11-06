@@ -15,7 +15,6 @@ public static class Endpoints
 		managersApi.MapGet("/", GetManagers);
 		managersApi.MapGet("/{managerId:int}", GetManager);
 		managersApi.MapGet("/disciplines", GetAllDisciplines);
-
 		managersApi.MapPost("/", RegisterManager);
 		managersApi.MapPost("/{managerId:int}/disciplines", AddDiscipline);
 
@@ -25,6 +24,11 @@ public static class Endpoints
 		teachersApi.MapGet("{teacherId:int}", GetTeacher);
 		teachersApi.MapPut("{teacherId:int}", UpdateTeacher);
 		teachersApi.MapDelete("{teacherId:int}", DeleteTeacher);
+
+		var disciplinesApi = teachersApi.MapGroup("{teacherId:int}/disciplines");
+		disciplinesApi.MapPost("/", AssignDisciplineToTeacher);
+		disciplinesApi.MapGet("/", GetTeacherDisciplines);
+		disciplinesApi.MapDelete("{disciplineId:int}", UnassignDisciplineFromTeacher);
 	}
 
 	private static async Task<IResult> AddDiscipline(
@@ -203,6 +207,76 @@ public static class Endpoints
 		return Results.NoContent();
 	}
 
+	private static async Task<IResult> AssignDisciplineToTeacher(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int teacherId,
+		[FromBody] AssignDisciplineRequest request)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(teacherId);
+		if (teacher == null || teacher.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		var discipline = await dbContext.Disciplines.SingleOrDefaultAsync(
+			x => x.CompanyId == companyId && x.Id == request.DisciplineId);
+		if (discipline == null || discipline.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		teacher.AssignDiscipline(discipline);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
+	private static async Task<IResult> GetTeacherDisciplines(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int teacherId)
+	{
+		var teacher = await dbContext.Teachers
+			.Include(x => x.Disciplines)
+			.SingleOrDefaultAsync(x => x.Id == teacherId);
+		if (teacher is null || teacher.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(teacher.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)));
+	}
+
+	private static async Task<IResult> UnassignDisciplineFromTeacher(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int teacherId,
+		[FromRoute] int disciplineId)
+	{
+		var teacher = await dbContext.Teachers
+			.Include(x => x.Disciplines)
+			.SingleOrDefaultAsync(x => x.Id == teacherId);
+		if (teacher is null || teacher.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		var discipline = teacher.Disciplines.SingleOrDefault(x => x.Id == disciplineId);
+		if (discipline is null || discipline.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		teacher.Unassign(discipline);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
 	private sealed record AddDisciplineRequest([MaxLength(300)] string Name);
 
 	private sealed record RegisterManagerRequest(
@@ -221,4 +295,6 @@ public static class Endpoints
 	private sealed record RegisterTeacherRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string FatherName, [MaxLength(255)] [EmailAddress] string Email);
 
 	private sealed record UpdateTeacherRequest([MaxLength(255)] string? Name, [MaxLength(255)] string? Surname, [MaxLength(255)] string? FatherName, [MaxLength(255)] [EmailAddress] string? Email);
+
+	private sealed record AssignDisciplineRequest(int DisciplineId);
 }
