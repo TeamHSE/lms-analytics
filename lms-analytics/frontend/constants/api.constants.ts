@@ -19,7 +19,9 @@ class ApiConstants {
 
 	private studentsRoot = `${ this.apiRoot }/students`;
 	STUDENTS = `${ this.studentsRoot }/`;
-	ADD_STUDENT = `${ this.studentsRoot }/`;
+	
+	private companiesRoot = `${ this.apiRoot }/companies`;
+	COMPANIES = `${ this.companiesRoot }/`;
 }
 
 export const API_CONSTANTS = new ApiConstants();
