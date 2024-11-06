@@ -13,8 +13,11 @@ public static class TeachersEndpoints
 		var api = app.MapGroup("teachers")
 			.WithTags("Преподаватели");
 
-		api.MapGet("data", GetDataTeachers);
-		api.MapPost("add", AddTeacher);
+		api.MapGet("/", GetDataTeachers);
+		api.MapPost("/", AddTeacher);
+		api.MapGet("{id:int}", GetTeacherById);
+		api.MapPut("{id:int}", UpdateTeacher);
+		api.MapDelete("{id:int}", DeleteTeacher);
 	}
 
 	/// <summary>
@@ -33,7 +36,7 @@ public static class TeachersEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями преподавателя</param>
-	private static async Task<IResult> AddTeacher([FromServices] AppDbContext dbContext, SendTeacherRequest request)
+	private static async Task<IResult> AddTeacher([FromServices] AppDbContext dbContext, [FromBody] TeacherRequest request)
 	{
 		Teacher teacherToAdd = new()
 		{
@@ -48,7 +51,7 @@ public static class TeachersEndpoints
 							  string.IsNullOrWhiteSpace(teacherToAdd.Lastname) &&
 							  string.IsNullOrWhiteSpace(teacherToAdd.Email);
 
-		if (teacherToAdd == null || isValidStudent)
+		if (isValidStudent)
 		{
 			return Results.BadRequest("Invalid teacher data");
 		}
@@ -60,11 +63,72 @@ public static class TeachersEndpoints
 	}
 
 	/// <summary>
+	/// Получение данных о преподавателе через Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя, чтобы получить её данные</param>
+	private static async Task<IResult> GetTeacherById([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher is null)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(teacher);
+	}
+
+	/// <summary>
+	/// Обновление данных преподавателя, через Id и новые данные
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя</param>
+	/// <param name="request">Преподаватель с данными для обновления</param>
+	private static async Task<IResult> UpdateTeacher([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] TeacherRequest request)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher == null)
+		{
+			return Results.NotFound();
+		}
+
+		teacher.Name = request.Name;
+		teacher.Surname = request.Surname;
+		teacher.Lastname = request.Lastname;
+		teacher.Email = request.Email;
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(teacher);
+	}
+
+	/// <summary>
+	/// Удаление преподавателя из БД по Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id преподавателя, чтобы удалить её</param>
+	private static async Task<IResult> DeleteTeacher([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var teacher = await dbContext.Teachers.FindAsync(id);
+
+		if (teacher == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Remove(teacher);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
+	/// <summary>
 	/// Request body
 	/// </summary>
 	/// <param name="Name">Имя преподавателя</param>
 	/// <param name="Surname">фамилия преподавателя</param>
 	/// <param name="Lastname">отчество преподавателя</param>
 	/// <param name="Email">почта преподавателя</param>
-	private sealed record SendTeacherRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string Lastname, [MaxLength(255)] string Email);
+	private sealed record TeacherRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string Lastname, [MaxLength(255)] string Email);
 }
