@@ -12,8 +12,11 @@ public static class StudentGroupsEndpoints
 		var api = app.MapGroup("groups")
 			.WithTags("Учебные группы");
 
-		api.MapGet("data", GetDataGroup);
-		api.MapPost("add", AddGroup);
+		api.MapGet("/", GetDataGroup);
+		api.MapPost("/", AddGroup);
+		api.MapGet("{id:int}", GetGroupById);
+		api.MapPut("{id:int}", UpdateGroup);
+		api.MapDelete("{id:int}", DeleteGroup);
 	}
 
 	/// <summary>
@@ -28,11 +31,11 @@ public static class StudentGroupsEndpoints
 	}
 
 	/// <summary>
-	/// Получение данных таблицы Компаний в виде списка
+	/// Получение данных таблицы Учебные группы в виде списка
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями учебной группы</param>
-	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, SendGroupRequest request)
+	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, [FromBody] GroupRequest request)
 	{
 		StudyGroup groupToAdd = new()
 		{
@@ -44,7 +47,7 @@ public static class StudentGroupsEndpoints
 		bool isValidGroup = string.IsNullOrWhiteSpace(groupToAdd.Program) &&
 							request is { AdmissionYear: > 1999, GroupNumber: > 0 };
 
-		if (groupToAdd == null || isValidGroup)
+		if (isValidGroup)
 		{
 			return Results.BadRequest("Invalid group data");
 		}
@@ -56,10 +59,70 @@ public static class StudentGroupsEndpoints
 	}
 
 	/// <summary>
+	/// Получение данных о учебной группе через Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id учебной группы, чтобы получить её данные</param>
+	private static async Task<IResult> GetGroupById([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var group = await dbContext.StudyGroups.FindAsync(id);
+
+		if (group is null)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(group);
+	}
+
+	/// <summary>
+	/// Обновление данных учебной группы, через Id и новые данные
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id учебной группы</param>
+	/// <param name="request">Учебная группа с данными для обновления</param>
+	private static async Task<IResult> UpdateGroup([FromServices] AppDbContext dbContext, [FromRoute] int id, [FromBody] GroupRequest request)
+	{
+		var group = await dbContext.StudyGroups.FindAsync(id);
+
+		if (group == null)
+		{
+			return Results.NotFound();
+		}
+
+		group.Program = request.Program;
+		group.AdmissionYear = request.AdmissionYear;
+		group.GroupNumber = request.GroupNumber;
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(group);
+	}
+
+	/// <summary>
+	/// Удаление учебной группы из БД по Id
+	/// </summary>
+	/// <param name="dbContext">База данных</param>
+	/// <param name="id">Id учебной группы, чтобы удалить её</param>
+	private static async Task<IResult> DeleteGroup([FromServices] AppDbContext dbContext, [FromRoute] int id)
+	{
+		var group = await dbContext.StudyGroups.FindAsync(id);
+
+		if (group == null)
+		{
+			return Results.NotFound();
+		}
+
+		dbContext.Remove(group);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
+	/// <summary>
 	/// Request body
 	/// </summary>
 	/// <param name="Program">Название учебной программы</param>
 	/// <param name="AdmissionYear">Год набора группы на программу</param>
-	/// <param name="GroupNumber">Номмер группы</param>
-	private sealed record SendGroupRequest([MaxLength(255)] string Program, int AdmissionYear, int GroupNumber);
+	/// <param name="GroupNumber">Номер группы</param>
+	private sealed record GroupRequest([MaxLength(255)] string Program, int AdmissionYear, int GroupNumber);
 }
