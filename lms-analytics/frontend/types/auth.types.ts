@@ -21,5 +21,3 @@ export interface ITokensResponse {
 }
 
 export type AuthResponse = ITokensResponse & { user: IUser };
-
-// export type TypeUserForm = Omit<IUser, 'id'> & { password?: string };
