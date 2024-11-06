@@ -27,7 +27,7 @@ public static class CompaniesEndpoints
 	{
 		var companies = await dbContext.Companies.ToListAsync();
 
-		return Results.Ok(companies);
+		return Results.Ok(companies.Select(c => new CompanyResponse(c.Id, c.Name)));
 	}
 
 	/// <summary>
@@ -54,7 +54,7 @@ public static class CompaniesEndpoints
 		var company = admin.RegisterCompany(request.CompanyName);
 		await dbContext.SaveChangesAsync();
 
-		return Results.Created($"/companies/{company.Id}", company);
+		return Results.Created($"/companies/{company.Id}", new CompanyResponse(company.Id, company.Name));
 	}
 
 	/// <summary>
@@ -71,7 +71,7 @@ public static class CompaniesEndpoints
 			return Results.NotFound();
 		}
 
-		return Results.Ok(company);
+		return Results.Ok(new CompanyResponse(company.Id, company.Name));
 	}
 
 	/// <summary>
@@ -92,7 +92,7 @@ public static class CompaniesEndpoints
 		company.Name = request.CompanyName;
 		await dbContext.SaveChangesAsync();
 
-		return Results.Ok(company);
+		return Results.Ok(new CompanyResponse(company.Id, company.Name));
 	}
 
 	/// <summary>
@@ -121,4 +121,6 @@ public static class CompaniesEndpoints
 	/// <param name="CompanyName">Название компании</param>
 	/// <param name="AdminId">ID администратора</param>
 	private sealed record CompanyRequest(int AdminId, [MaxLength(255)] string CompanyName);
+
+	private sealed record CompanyResponse(int Id, string Name);
 }
