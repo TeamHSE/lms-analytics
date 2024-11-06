@@ -1,102 +1,106 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { List, Button, Modal, Input, Tabs, Select } from "antd";
+import { feedbackService } from "@/services/feedback.service";
+import { studentService } from "@/services/student.service";
 
 const { TabPane } = Tabs;
 
+const TEACHER_ID = 1; // todo
 const FeedbackPage = () => {
-    const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-    const [feedbackText, setFeedbackText] = useState<string>("");
-    const [selectedStudent, setSelectedStudent] = useState<string | undefined>(undefined);
+	const [ isModalVisible, setIsModalVisible ] = useState<boolean>(false);
+	const [ feedbackText, setFeedbackText ] = useState<string>("");
+	const [ selectedStudentId, setSelectedStudentId ] = useState<number | undefined>(undefined);
+	const [ students, setStudents ] = useState<any[]>([]);
+	const [ receivedFeedbacks, setReceivedFeedbacks ] = useState<any[]>([]);
+	const [ sentFeedbacks, setSentFeedbacks ] = useState<any[]>([]);
 
-    const receivedFeedback = [
-        { id: 1, student: "Иванов И.И.", feedback: "Интересная лекция!" },
-        { id: 2, student: "Петров П.П.", feedback: "Побольше бы примеров" },
-    ];
+	useEffect(() => {
+		studentService.getStudents().then((students) => setStudents(students));
+		feedbackService.getFeedbacksForTeacher(TEACHER_ID).then((feedbacks) => setReceivedFeedbacks(feedbacks));
+		feedbackService.getFeedbacksFromTeacher(TEACHER_ID).then((feedbacks) => setSentFeedbacks(feedbacks));
+	}, []);
 
-    const sentFeedbacks = [
-        { id: 1, student: "Сидоров С.С.", feedback: "Хорошо написал тест" },
-        { id: 2, student: "Алексеев А.А.", feedback: "Низкое посещение занятий" },
-    ];
-    const [sentFeedback, setSentFeedback] = useState(sentFeedbacks);
+	const handleSendFeedback = async () => {
+		if (selectedStudentId) {
+			const sentFeedback = await feedbackService.addTeacherStudentFeedback({
+				senderId: TEACHER_ID,
+				receiverId: selectedStudentId,
+				text: feedbackText,
+			});
+			setSentFeedbacks([...sentFeedbacks, sentFeedback]);
 
-    const handleSendFeedback = () => {
-        if (selectedStudent) {
-            console.log("Отправляется обратная связь:", feedbackText);
-            setSentFeedback([
-                ...sentFeedback,
-                { id: sentFeedback.length + 1, student: selectedStudent, feedback: feedbackText },
-            ]);
-            setIsModalVisible(false);
-            setFeedbackText("");
-            setSelectedStudent(undefined);
-        } else {
-            console.log("Выберите студента для отправки обратной связи");
-        }
-    };
+			setIsModalVisible(false);
+			setFeedbackText("");
+			setSelectedStudentId(undefined);
+		}
+	};
 
-    return (
-            <>
-                <h1>Обратная связь</h1>
-                <Tabs defaultActiveKey="1">
-                    <TabPane tab="Полученная обратная связь" key="1">
-                        <List
-                                header={<div>Полученная обратная связь</div>}
-                                bordered
-                                dataSource={receivedFeedback}
-                                renderItem={item => (
-                                        <List.Item>
-                                            <strong>{item.student}:</strong> {item.feedback}
-                                        </List.Item>
-                                )}
-                        />
-                    </TabPane>
-                    <TabPane tab="Отправленная обратная связь" key="2">
-                        <List
-                                header={<div>Отправленная обратная связь</div>}
-                                bordered
-                                dataSource={sentFeedback}
-                                renderItem={item => (
-                                        <List.Item>
-                                            <strong>{item.student}:</strong> {item.feedback}
-                                        </List.Item>
-                                )}
-                        />
-                    </TabPane>
-                </Tabs>
-                <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ top: "1%" }}>
-                    Отправить обратную связь
-                </Button>
-                <Modal
-                        title="Отправить обратную связь"
-                        open={isModalVisible}
-                        onCancel={() => setIsModalVisible(false)}
-                        onOk={handleSendFeedback}
-                        okText="Отправить"
-                        cancelText="Отмена"
-                >
-                    <Input.TextArea
-                            rows={4}
-                            value={feedbackText}
-                            onChange={(e) => setFeedbackText(e.target.value)}
-                            placeholder="Напишите Вашу обратную связь"
-                    />
-                    <Select
-                            style={{ width: "100%", marginTop: "16px" }}
-                            placeholder="Выберите студента"
-                            value={selectedStudent}
-                            onChange={(value) => setSelectedStudent(value)}
-                    >
-                        <Select.Option value="Иванов И.И.">Иванов И.И.</Select.Option>
-                        <Select.Option value="Петров П.П.">Петров П.П.</Select.Option>
-                        <Select.Option value="Сидоров С.С.">Сидоров С.С.</Select.Option>
-                        <Select.Option value="Алексеев А.А.">Алексеев А.А.</Select.Option>
-                        <Select.Option value="Кузнецов К.К.">Кузнецов К.К.</Select.Option>
-                    </Select>
-                </Modal>
-            </>
-    );
+	return (
+		<>
+			<h1>Обратная связь</h1>
+			<Tabs defaultActiveKey="1">
+				<TabPane tab="Полученная обратная связь" key="1">
+					<List
+						header={ <div>Обратная связь от студентов</div> }
+						bordered
+						dataSource={ receivedFeedbacks }
+						renderItem={ item => (
+							<List.Item>
+								<strong>
+									{ studentService.getStudentName(students.find(student => student.id === item.senderId)) }:
+								</strong> { item.text }
+							</List.Item>
+						) }
+					/>
+				</TabPane>
+				<TabPane tab="Отправленная обратная связь" key="2">
+					<List
+						header={ <div>Обратная связь студентам</div> }
+						bordered
+						dataSource={ sentFeedbacks }
+						renderItem={ item => (
+							<List.Item>
+								<strong>
+									{ studentService.getStudentName(students.find(student => student.id === item.receiverId)) }:
+								</strong> { item.text }
+							</List.Item>
+						) }
+					/>
+				</TabPane>
+			</Tabs>
+			<Button type="primary" onClick={ () => setIsModalVisible(true) } style={ { top: "1%" } }>
+				Отправить обратную связь
+			</Button>
+			<Modal
+				title="Отправить обратную связь"
+				open={ isModalVisible }
+				onCancel={ () => setIsModalVisible(false) }
+				onOk={ handleSendFeedback }
+				okText="Отправить"
+				cancelText="Отмена"
+			>
+				<Input.TextArea
+					rows={ 4 }
+					value={ feedbackText }
+					onChange={ (e) => setFeedbackText(e.target.value) }
+					placeholder="Напишите Вашу обратную связь"
+				/>
+				<Select
+					style={ { width: "100%", marginTop: "16px" } }
+					placeholder="Выберите студента"
+					value={ selectedStudentId }
+					onChange={ (value) => setSelectedStudentId(value) }
+					options={ students.map((student) => ({
+						value: student.id,
+						label: studentService.getStudentName(student),
+					})) }
+				>
+				</Select>
+			</Modal>
+		</>
+	);
 };
 
 export default FeedbackPage;
