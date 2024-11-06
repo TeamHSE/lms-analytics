@@ -1,13 +1,11 @@
 import axios, { CreateAxiosDefaults } from 'axios';
-
-import { ErrorsEnum, errorCatch } from '@/api/error-catcher';
-
+import { toast } from 'sonner';
+import { errorCatch } from '@/api/error-catcher';
 import { getAccessToken, removeAccessToken } from '@/services/auth-token.service';
-import { authService } from '@/services/auth.service';
 
 const options: CreateAxiosDefaults = {
-	baseURL: 'http://localhost:5220/',
-	timeout: 60,
+	baseURL: 'http://localhost:5220',
+	timeout: 60 * 1000,
 	headers: {
 		'Content-Type': 'application/json',
 	},
@@ -15,6 +13,39 @@ const options: CreateAxiosDefaults = {
 };
 
 const clientUnauthenticated = axios.create(options);
+clientUnauthenticated.interceptors.response.use(
+	config => config,
+	async error => {
+		if (error?.response?.status === 422 || error?.response?.status === 400) {
+			if (error.response.data.errors) {
+				const validationErrors = error.response.data.errors.map((e: any) => '- ' + e.msg);
+				toast.error('Ошибки валидации!',
+					{
+						duration: 10000,
+						closeButton: true,
+						important: true,
+						description: validationErrors.join('\n'),
+						style: {
+							whiteSpace: 'pre-line',
+						},
+					});
+			} else {
+				toast.error(error.response.data.message);
+			}
+			throw error;
+		}
+
+		if (error?.response?.status.toString()[0] === 4) {
+			toast.error(error?.response?.data?.message);
+		}
+
+		if (process.env.NODE_ENV == 'production') {
+			toast.error('Произошла ошибка, обратитесь к разработчикам',
+				{ duration: 10000, closeButton: true, important: true });
+		}
+
+		throw error;
+	});
 
 const client = axios.create(options);
 client.interceptors.request.use(config => {
@@ -33,20 +64,46 @@ client.interceptors.response.use(
 		const originalRequest = error.config;
 
 		if (
-			(error?.response?.status[0] === '4' || errorCatch(error) === ErrorsEnum.JWT_EXPIRED || errorCatch(error) === ErrorsEnum.JWT_MUST_BE_PROVIDED) &&
-			error.config &&
-			!error.config._isRetry
+			error?.response?.status === 401
+			&& error.config
+			&& !error.config._isRetry
 		) {
-			originalRequest._isRetr = true;
+			originalRequest._isRetry = true;
 			try {
-				await authService.getNewTokens();
 				return client.request(originalRequest);
 			} catch (error) {
-				if (errorCatch(error) === ErrorsEnum.JWT_EXPIRED) {
+				if (errorCatch(error) === 'jwt expired') {
 					removeAccessToken();
 				}
 			}
 		}
+
+		if (error?.response?.status === 422) {
+			if (error.response.data.errors) {
+				const validationErrors = error.response.data.errors.map((e: any) => '- ' + e.msg);
+				toast.error('Ошибки валидации!',
+					{
+						duration: 10000,
+						closeButton: true,
+						important: true,
+						description: validationErrors.join('\n'),
+						style: {
+							whiteSpace: 'pre-line',
+						},
+					});
+			} else {
+				toast.error('Ошибки валидации');
+			}
+			return;
+		}
+
+		if (process.env.NODE_ENV == 'production') {
+			toast.error('Произошла ошибка, обратитесь к разработчикам',
+				{ duration: 10000, closeButton: true, important: true });
+			return;
+		}
+
+		throw error;
 	},
 );
 
