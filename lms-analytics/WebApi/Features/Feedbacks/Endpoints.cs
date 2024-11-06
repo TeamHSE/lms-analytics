@@ -16,10 +16,10 @@ public static class Endpoints
 		api.MapPost("student-teacher", AddStudentTeacherFeedback);
 		api.MapPost("x-student", AddCrossStudentsFeedback);
 
-		api.MapGet("for-teacher", GetForTeacherFeedbacks);
-		api.MapGet("from-teacher", GetFromTeacherFeedbacks);
-		api.MapGet("for-student", GetForStudentFeedbacks);
-		api.MapGet("from-student", GetFromStudentFeedbacks);
+		api.MapGet("for-teacher/{teacherId:int}", GetForTeacherFeedbacks);
+		api.MapGet("from-teacher/{teacherId:int}", GetFromTeacherFeedbacks);
+		api.MapGet("for-student/{studentId:int}", GetForStudentFeedbacks);
+		api.MapGet("from-student/{studentId:int}", GetFromStudentFeedbacks);
 	}
 
 	private static async Task<IResult> AddTeacherStudentFeedback([FromServices] AppDbContext dbContext, SendFeedbackRequest request)
@@ -124,7 +124,7 @@ public static class Endpoints
 		return Results.Created($"/feedbacks/x-student/{feedback.Id}", feedback);
 	}
 
-	private static async Task<IResult> GetForTeacherFeedbacks([FromServices] AppDbContext dbContext, [FromQuery] int teacherId)
+	private static async Task<IResult> GetForTeacherFeedbacks([FromServices] AppDbContext dbContext, [FromRoute] int teacherId)
 	{
 		var teacher = await dbContext.Teachers
 			.Where(x => x.Id == teacherId)
@@ -139,7 +139,7 @@ public static class Endpoints
 		return Results.Ok(teacher.ReceivedFeedbacks);
 	}
 
-	private static async Task<IResult> GetFromTeacherFeedbacks([FromServices] AppDbContext dbContext, [FromQuery] int teacherId)
+	private static async Task<IResult> GetFromTeacherFeedbacks([FromServices] AppDbContext dbContext, [FromRoute] int teacherId)
 	{
 		var teacher = await dbContext.Teachers
 			.Where(x => x.Id == teacherId)
@@ -154,7 +154,7 @@ public static class Endpoints
 		return Results.Ok(teacher.SentFeedbacks);
 	}
 
-	private static async Task<IResult> GetForStudentFeedbacks([FromServices] AppDbContext dbContext, [FromQuery] int studentId)
+	private static async Task<IResult> GetForStudentFeedbacks([FromServices] AppDbContext dbContext, [FromRoute] int studentId)
 	{
 		var student = await dbContext.Students
 			.Where(x => x.Id == studentId)
@@ -169,7 +169,7 @@ public static class Endpoints
 		return Results.Ok(student.ReceivedFeedbacks);
 	}
 
-	private static async Task<IResult> GetFromStudentFeedbacks([FromServices] AppDbContext dbContext, [FromQuery] int studentId)
+	private static async Task<IResult> GetFromStudentFeedbacks([FromServices] AppDbContext dbContext, [FromRoute] int studentId)
 	{
 		var student = await dbContext.Students
 			.Where(x => x.Id == studentId)
