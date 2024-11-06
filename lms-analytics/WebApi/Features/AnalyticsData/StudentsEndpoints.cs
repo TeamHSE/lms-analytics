@@ -8,7 +8,7 @@ namespace WebApi.Features.AnalyticsData;
 
 public static class StudentsEndpoints
 {
-	public static void MapData(this IEndpointRouteBuilder app)
+	public static void MapStudents(this IEndpointRouteBuilder app)
 	{
 		var api = app.MapGroup("students")
 			.WithTags("Студенты");
@@ -38,18 +38,11 @@ public static class StudentsEndpoints
 	/// <param name="request">Запрос с полями студента</param>
 	private static async Task<IResult> AddStudent([FromServices] AppDbContext dbContext, [FromBody] StudentRequest request)
 	{
-		Student studentToAdd = new()
-		{
-			Name = request.Name,
-			Surname = request.Surname,
-			Lastname = request.Lastname,
-			Email = request.Email,
-		};
+		var studentToAdd = new Student(request.Name, request.Surname, request.FatherName, request.Email);
 
-		bool isValidStudent = string.IsNullOrWhiteSpace(studentToAdd.Name) &&
-							  string.IsNullOrWhiteSpace(studentToAdd.Surname) &&
-							  string.IsNullOrWhiteSpace(studentToAdd.Lastname) &&
-							  string.IsNullOrWhiteSpace(studentToAdd.Email);
+		var isValidStudent = !string.IsNullOrWhiteSpace(studentToAdd.Name) &&
+							 !string.IsNullOrWhiteSpace(studentToAdd.Surname) &&
+							 !string.IsNullOrWhiteSpace(studentToAdd.Email);
 
 		if (isValidStudent)
 		{
@@ -96,7 +89,7 @@ public static class StudentsEndpoints
 
 		student.Name = request.Name;
 		student.Surname = request.Surname;
-		student.Lastname = request.Lastname;
+		student.FatherName = request.FatherName;
 		student.Email = request.Email;
 		await dbContext.SaveChangesAsync();
 
@@ -128,7 +121,7 @@ public static class StudentsEndpoints
 	/// </summary>
 	/// <param name="Name">Имя студента</param>
 	/// <param name="Surname">Фамилия студента</param>
-	/// <param name="Lastname">Отчество студента</param>
+	/// <param name="FatherName">Отчество студента</param>
 	/// <param name="Email">Почта студента</param>
-	private sealed record StudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string Lastname, [MaxLength(255)] string Email);
+	private sealed record StudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string FatherName, [MaxLength(255)] string Email);
 }

@@ -7,7 +7,7 @@ namespace WebApi.Features.AnalyticsData;
 
 public static class CompaniesEndpoints
 {
-	public static void MapData(this IEndpointRouteBuilder app)
+	public static void MapCompanies(this IEndpointRouteBuilder app)
 	{
 		var api = app.MapGroup("companies")
 			.WithTags("Компании");
@@ -37,20 +37,24 @@ public static class CompaniesEndpoints
 	/// <param name="request">Запрос с полями компании</param>
 	private static async Task<IResult> AddCompany([FromServices] AppDbContext dbContext, [FromBody] CompanyRequest request)
 	{
-		Company companyToAdd = new()
+		if (string.IsNullOrWhiteSpace(request.CompanyName))
 		{
-			Companyname = request.CompanyName,
-		};
-
-		if (string.IsNullOrWhiteSpace(companyToAdd.Companyname))
-		{
-			return Results.BadRequest("Invalid company data");
+			return Results.BadRequest("Не указано название компании");
 		}
 
-		dbContext.Companies.Add(companyToAdd);
+		var admin = await dbContext.Admins
+			.Where(a => a.Id == request.AdminId)
+			.Include(a => a.Companies)
+			.SingleOrDefaultAsync();
+		if (admin is null)
+		{
+			return Results.NotFound();
+		}
+
+		var company = admin.RegisterCompany(request.CompanyName);
 		await dbContext.SaveChangesAsync();
 
-		return Results.Created($"/companies/{companyToAdd.Id}", companyToAdd);
+		return Results.Created($"/companies/{company.Id}", company);
 	}
 
 	/// <summary>
@@ -85,7 +89,7 @@ public static class CompaniesEndpoints
 			return Results.NotFound();
 		}
 
-		company.Companyname = request.CompanyName;
+		company.Name = request.CompanyName;
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(company);
@@ -115,5 +119,6 @@ public static class CompaniesEndpoints
 	/// Request body
 	/// </summary>
 	/// <param name="CompanyName">Название компании</param>
-	private sealed record CompanyRequest([MaxLength(255)] string CompanyName);
+	/// <param name="AdminId">ID администратора</param>
+	private sealed record CompanyRequest(int AdminId, [MaxLength(255)] string CompanyName);
 }

@@ -7,6 +7,7 @@ using Serilog;
 using WebApi.Database;
 using WebApi.Features.AnalyticsData;
 using WebApi.Features.Feedbacks;
+using WebApi.Features.Managers;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
@@ -43,11 +44,11 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/ping", () => "pong")
 	.WithTags("Health");
 
-Endpoints.MapFeedbacks(app);
-CompaniesEndpoints.MapData(app);
-StudentsEndpoints.MapData(app);
-StudentGroupsEndpoints.MapData(app);
-TeachersEndpoints.MapData(app);
+app.MapFeedbacks();
+app.MapCompanies();
+app.MapStudents();
+app.MapStudentGroups();
+app.MapManagers();
 
 Log.Information("Application started");
 

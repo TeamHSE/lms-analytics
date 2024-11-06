@@ -2,7 +2,8 @@
 
 namespace WebApi.Features.Users;
 
-public class Student : User, ICanShareFeedback
+public class Student(string name, string surname, string? fatherName, string email)
+	: User(name, surname, fatherName, email), ICanShareFeedback
 {
 	public List<Feedback> ReceivedFeedbacks { get; init; } = null!;
 

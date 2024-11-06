@@ -7,7 +7,7 @@ namespace WebApi.Features.AnalyticsData;
 
 public static class StudentGroupsEndpoints
 {
-	public static void MapData(this IEndpointRouteBuilder app)
+	public static void MapStudentGroups(this IEndpointRouteBuilder app)
 	{
 		var api = app.MapGroup("groups")
 			.WithTags("Учебные группы");
