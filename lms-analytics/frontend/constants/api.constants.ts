@@ -18,8 +18,8 @@ class ApiConstants {
 	FROM_STUDENT = `${ this.feedbacksRoot }/from-student`;
 
 	private studentsRoot = `${ this.apiRoot }/students`;
-	STUDENTS = `${ this.studentsRoot }/data`;
-	ADD_STUDENT = `${ this.studentsRoot }/add`;
+	STUDENTS = `${ this.studentsRoot }/`;
+	ADD_STUDENT = `${ this.studentsRoot }/`;
 }
 
 export const API_CONSTANTS = new ApiConstants();
