@@ -1,9 +1,9 @@
-interface Student {
+interface StudentResponse {
 	id: number;
 	name: string;
 	surname: string;
-	lastname: string | null;
+	fatherName: string | null;
 	email: string;
 }
 
-type AddStudentRequest = Omit<Student, 'id'>;
+type AddStudentRequest = Omit<StudentResponse, 'id'>;
