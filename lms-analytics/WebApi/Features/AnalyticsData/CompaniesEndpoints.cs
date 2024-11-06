@@ -35,7 +35,7 @@ public static class CompaniesEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями компании</param>
-	private static async Task<IResult> AddCompany([FromServices] AppDbContext dbContext, CompanyRequest request)
+	private static async Task<IResult> AddCompany([FromServices] AppDbContext dbContext, [FromBody] CompanyRequest request)
 	{
 		Company companyToAdd = new()
 		{

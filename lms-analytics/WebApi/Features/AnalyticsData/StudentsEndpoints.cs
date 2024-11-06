@@ -36,7 +36,7 @@ public static class StudentsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями студента</param>
-	private static async Task<IResult> AddStudent([FromServices] AppDbContext dbContext, StudentRequest request)
+	private static async Task<IResult> AddStudent([FromServices] AppDbContext dbContext, [FromBody] StudentRequest request)
 	{
 		Student studentToAdd = new()
 		{

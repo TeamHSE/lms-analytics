@@ -35,7 +35,7 @@ public static class StudentGroupsEndpoints
 	/// </summary>
 	/// <param name="dbContext">База данных</param>
 	/// <param name="request">Запрос с полями учебной группы</param>
-	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, GroupRequest request)
+	private static async Task<IResult> AddGroup([FromServices] AppDbContext dbContext, [FromBody] GroupRequest request)
 	{
 		StudyGroup groupToAdd = new()
 		{
