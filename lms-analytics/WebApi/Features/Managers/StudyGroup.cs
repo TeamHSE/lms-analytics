@@ -6,7 +6,7 @@ namespace WebApi.Features.Managers;
 
 public class StudyGroup
 {
-	public StudyGroup(string program, int groupNumber, int admissionYear, int companyId)
+	public StudyGroup(string program, string groupNumber, int admissionYear, int companyId)
 	{
 		Program = program;
 		GroupNumber = groupNumber;
@@ -21,7 +21,8 @@ public class StudyGroup
 
 	public int AdmissionYear { get; set; }
 
-	public int GroupNumber { get; set; }
+	[MaxLength(255)]
+	public string GroupNumber { get; set; }
 
 	public int CompanyId { get; private init; }
 

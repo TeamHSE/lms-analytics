@@ -580,15 +580,15 @@ public static class Endpoints
 			});
 	}
 
-	private sealed record RegisterStudyGroupRequest(string Program, int GroupNumber, int AdmissionYear);
+	private sealed record RegisterStudyGroupRequest(string Program, string GroupNumber, int AdmissionYear);
 
-	private sealed record StudyGroupResponse(int Id, string Program, int GroupNumber, int AdmissionYear);
+	private sealed record StudyGroupResponse(int Id, string Program, string GroupNumber, int AdmissionYear);
 
 	private sealed record RegisterStudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string? FatherName, [EmailAddress] string Email, int StudyGroupId);
 
 	private sealed record StudentResponse(int Id, string Name, string Surname, string? FatherName, string Email, int StudyGroupId);
 
-	private sealed record UpdateStudyGroupRequest([MaxLength(255)] string? Program, int? GroupNumber, int? AdmissionYear);
+	private sealed record UpdateStudyGroupRequest([MaxLength(255)] string? Program, string? GroupNumber, int? AdmissionYear);
 
 	private sealed record UpdateStudentRequest([MaxLength(255)] string? Name, [MaxLength(255)] string? Surname, [EmailAddress] string? Email);
 

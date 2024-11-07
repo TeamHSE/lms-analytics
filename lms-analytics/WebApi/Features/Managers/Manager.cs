@@ -36,7 +36,7 @@ public class Manager : User
 		return teacher;
 	}
 
-	public StudyGroup RegisterStudyGroup(string program, int groupNumber, int admissionYear)
+	public StudyGroup RegisterStudyGroup(string program, string groupNumber, int admissionYear)
 	{
 		var group = new StudyGroup(program, groupNumber, admissionYear, Company.Id);
 		StudyGroups.Add(group);
