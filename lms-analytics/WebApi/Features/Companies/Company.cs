@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using WebApi.Features.Managers;
 
-namespace WebApi.Features;
+namespace WebApi.Features.Companies;
 
 public class Company
 {

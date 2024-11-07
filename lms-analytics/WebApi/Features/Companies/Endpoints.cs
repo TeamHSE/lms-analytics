@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Database;
 
-namespace WebApi.Features.AnalyticsData;
+namespace WebApi.Features.Companies;
 
-public static class CompaniesEndpoints
+public static class Endpoints
 {
 	public static void MapCompanies(this IEndpointRouteBuilder app)
 	{

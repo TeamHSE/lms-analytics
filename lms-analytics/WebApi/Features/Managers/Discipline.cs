@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using WebApi.Features.Companies;
 using WebApi.Features.Users;
 
 namespace WebApi.Features.Managers;

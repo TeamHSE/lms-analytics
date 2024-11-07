@@ -25,10 +25,30 @@ public static class Endpoints
 		teachersApi.MapPut("{teacherId:int}", UpdateTeacher);
 		teachersApi.MapDelete("{teacherId:int}", DeleteTeacher);
 
-		var disciplinesApi = teachersApi.MapGroup("{teacherId:int}/disciplines");
-		disciplinesApi.MapPost("/", AssignDisciplineToTeacher);
-		disciplinesApi.MapGet("/", GetTeacherDisciplines);
-		disciplinesApi.MapDelete("{disciplineId:int}", UnassignDisciplineFromTeacher);
+		var teacherDisciplinesApi = teachersApi.MapGroup("{teacherId:int}/disciplines");
+		teacherDisciplinesApi.MapPost("/", AssignDisciplineToTeacher);
+		teacherDisciplinesApi.MapGet("/", GetTeacherDisciplines);
+		teacherDisciplinesApi.MapDelete("{disciplineId:int}", UnassignDisciplineFromTeacher);
+
+		var studyGroupsApi = managersApi.MapGroup("{managerId:int}/student-groups");
+		studyGroupsApi.MapGet("/", GetStudyGroups);
+		studyGroupsApi.MapPost("/", RegisterStudyGroup);
+		studyGroupsApi.MapGet("{studyGroupId:int}", GetStudyGroup);
+		studyGroupsApi.MapPut("{studyGroupId:int}", UpdateStudyGroup);
+		studyGroupsApi.MapDelete("{studyGroupId:int}", DeleteStudyGroup);
+
+		var studentsApi = managersApi.MapGroup("{managerId:int}/students");
+		studentsApi.MapGet("/", GetStudents);
+		studentsApi.MapPost("/", RegisterStudent);
+		studentsApi.MapGet("{studentId:int}", GetStudent);
+		studentsApi.MapPut("{studentId:int}", UpdateStudent);
+		studentsApi.MapDelete("{studentId:int}", DeleteStudent);
+		studentsApi.MapPost("{studentId:int}/student-groups/{studyGroupId:int}", AssignStudentToGroup);
+
+		var studentDisciplinesApi = studentsApi.MapGroup("{studentId:int}/disciplines");
+		studentDisciplinesApi.MapPost("/", AssignDisciplineToStudent);
+		studentDisciplinesApi.MapGet("/", GetStudentDisciplines);
+		studentDisciplinesApi.MapDelete("{disciplineId:int}", UnassignDisciplineFromStudent);
 	}
 
 	private static async Task<IResult> AddDiscipline(
@@ -276,6 +296,301 @@ public static class Endpoints
 
 		return Results.NoContent();
 	}
+
+	private static async Task<IResult> GetStudyGroups(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId)
+	{
+		var studyGroups = await dbContext.StudyGroups
+			.Where(x => x.CompanyId == companyId)
+			.ToListAsync();
+
+		return Results.Ok(studyGroups.Select(x => new StudyGroupResponse(x.Id, x.Program, x.GroupNumber, x.AdmissionYear)));
+	}
+
+	private static async Task<IResult> RegisterStudyGroup(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromBody] RegisterStudyGroupRequest request)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.Company)
+			.SingleOrDefaultAsync(x => x.Id == managerId && x.CompanyId == companyId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		var group = manager.RegisterStudyGroup(request.Program, request.GroupNumber, request.AdmissionYear);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Created(
+			$"student-groups/{group.Id}",
+			new StudyGroupResponse(group.Id, group.Program, group.GroupNumber, group.AdmissionYear));
+	}
+
+	private static async Task<IResult> GetStudyGroup(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studyGroupId)
+	{
+		var studyGroup = await dbContext.StudyGroups.FindAsync(studyGroupId);
+		if (studyGroup == null || studyGroup.CompanyId != companyId)
+		{
+			return Results.NotFound("Группа студентов не найдена");
+		}
+
+		return Results.Ok(new StudyGroupResponse(studyGroup.Id, studyGroup.Program, studyGroup.GroupNumber, studyGroup.AdmissionYear));
+	}
+
+	private static async Task<IResult> UpdateStudyGroup(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studyGroupId,
+		[FromBody] UpdateStudyGroupRequest request)
+	{
+		var studyGroup = await dbContext.StudyGroups.FindAsync(studyGroupId);
+		if (studyGroup == null || studyGroup.CompanyId != companyId)
+		{
+			return Results.NotFound("Группа студентов не найдена");
+		}
+
+		studyGroup.Program = request.Program ?? studyGroup.Program;
+		studyGroup.GroupNumber = request.GroupNumber ?? studyGroup.GroupNumber;
+		studyGroup.AdmissionYear = request.AdmissionYear ?? studyGroup.AdmissionYear;
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(new StudyGroupResponse(studyGroup.Id, studyGroup.Program, studyGroup.GroupNumber, studyGroup.AdmissionYear));
+	}
+
+	private static async Task<IResult> DeleteStudyGroup(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studyGroupId)
+	{
+		var studyGroup = await dbContext.StudyGroups.FindAsync(studyGroupId);
+		if (studyGroup == null || studyGroup.CompanyId != companyId)
+		{
+			return Results.NotFound("Группа студентов не найдена");
+		}
+
+		dbContext.StudyGroups.Remove(studyGroup);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
+	private static async Task<IResult> GetStudents(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId)
+	{
+		var students = await dbContext.Students.Where(x => x.CompanyId == companyId).ToListAsync();
+
+		return Results.Ok(students.Select(x => new StudentResponse(x.Id, x.Name, x.Surname, x.Email, x.StudyGroupId)));
+	}
+
+	private static async Task<IResult> RegisterStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromBody] RegisterStudentRequest request)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.Company)
+			.Include(x => x.StudyGroups)
+			.ThenInclude(x => x.Students)
+			.SingleOrDefaultAsync(x => x.Id == managerId && x.CompanyId == companyId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		var isValidStudent = string.IsNullOrWhiteSpace(request.Name) ||
+							 string.IsNullOrWhiteSpace(request.Surname) ||
+							 string.IsNullOrWhiteSpace(request.Email);
+		if (isValidStudent)
+		{
+			return Results.BadRequest("Некорректные данные студента");
+		}
+
+		var student = manager.RegisterStudent(request.Name, request.Surname, request.FatherName, request.Email, request.StudyGroupId);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Created(
+			$"students/{student.Id}",
+			new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+	}
+
+	private static async Task<IResult> GetStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId)
+	{
+		var student = await dbContext.Students.FindAsync(studentId);
+		if (student == null || student.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+	}
+
+	private static async Task<IResult> UpdateStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId,
+		[FromBody] UpdateStudentRequest request)
+	{
+		var student = await dbContext.Students.FindAsync(studentId);
+		if (student == null || student.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		student.Name = request.Name ?? student.Name;
+		student.Surname = request.Surname ?? student.Surname;
+		student.Email = request.Email ?? student.Email;
+
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+	}
+
+	private static async Task<IResult> DeleteStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.StudyGroups)
+			.ThenInclude(x => x.Students)
+			.SingleOrDefaultAsync(x => x.Id == managerId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		manager.DeleteStudent(studentId);
+		await dbContext.SaveChangesAsync();
+
+		return Results.NoContent();
+	}
+
+	private static async Task<IResult> AssignStudentToGroup(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId,
+		[FromRoute] int studyGroupId)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.StudyGroups)
+			.ThenInclude(x => x.Students)
+			.SingleOrDefaultAsync(x => x.Id == managerId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		var student = manager.AssignStudentToGroup(studentId, studyGroupId);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+	}
+
+	private static async Task<IResult> AssignDisciplineToStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId,
+		[FromBody] AssignDisciplineRequest request)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.StudyGroups)
+			.ThenInclude(x => x.Students)
+			.ThenInclude(x => x.Disciplines)
+			.SingleOrDefaultAsync(x => x.Id == managerId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		var studentDisciplines = manager.AssignDisciplineToStudent(studentId, request.DisciplineId);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(
+			new
+			{
+				studentId,
+				disciplines = studentDisciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
+			});
+	}
+
+	private static async Task<IResult> GetStudentDisciplines(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId)
+	{
+		var student = await dbContext.Students
+			.Include(x => x.Disciplines)
+			.SingleOrDefaultAsync(x => x.Id == studentId);
+		if (student is null || student.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		return Results.Ok(student.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)));
+	}
+
+	private static async Task<IResult> UnassignDisciplineFromStudent(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromRoute] int studentId,
+		[FromRoute] int disciplineId)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.StudyGroups)
+			.ThenInclude(x => x.Students)
+			.ThenInclude(x => x.Disciplines)
+			.SingleOrDefaultAsync(x => x.Id == managerId);
+		if (manager is null)
+		{
+			return Results.NotFound();
+		}
+
+		var studentDisciplines = manager.UnassignDisciplineFromStudent(studentId, disciplineId);
+		await dbContext.SaveChangesAsync();
+
+		return Results.Ok(
+			new
+			{
+				studentId,
+				disciplines = studentDisciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
+			});
+	}
+
+	private sealed record RegisterStudyGroupRequest(string Program, int GroupNumber, int AdmissionYear);
+
+	private sealed record StudyGroupResponse(int Id, string Program, int GroupNumber, int AdmissionYear);
+
+	private sealed record RegisterStudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string? FatherName, [EmailAddress] string Email, int StudyGroupId);
+
+	private sealed record StudentResponse(int Id, string Name, string Surname, string Email, int StudyGroupId);
+
+	private sealed record UpdateStudyGroupRequest([MaxLength(255)] string? Program, int? GroupNumber, int? AdmissionYear);
+
+	private sealed record UpdateStudentRequest([MaxLength(255)] string? Name, [MaxLength(255)] string? Surname, [EmailAddress] string? Email);
 
 	private sealed record AddDisciplineRequest([MaxLength(300)] string Name);
 

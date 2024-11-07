@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using WebApi.Database;
-using WebApi.Features.AnalyticsData;
+using WebApi.Features.Companies;
 using WebApi.Features.Feedbacks;
 using WebApi.Features.Managers;
 var builder = WebApplication.CreateBuilder(args);
@@ -46,8 +46,6 @@ app.MapGet("/ping", () => "pong")
 
 app.MapFeedbacks();
 app.MapCompanies();
-app.MapStudents();
-app.MapStudentGroups();
 app.MapManagers();
 
 Log.Information("Application started");

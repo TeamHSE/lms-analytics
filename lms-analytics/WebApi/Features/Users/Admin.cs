@@ -1,3 +1,4 @@
+using WebApi.Features.Companies;
 using WebApi.Features.Managers;
 
 namespace WebApi.Features.Users;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApi.Features;
+using WebApi.Features.Companies;
 using WebApi.Features.Feedbacks;
 using WebApi.Features.Managers;
 using WebApi.Features.Users;

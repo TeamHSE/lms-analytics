@@ -1,4 +1,5 @@
-﻿using WebApi.Features.Feedbacks;
+﻿using WebApi.Features.Companies;
+using WebApi.Features.Feedbacks;
 using WebApi.Features.Managers;
 
 namespace WebApi.Features.Users;
