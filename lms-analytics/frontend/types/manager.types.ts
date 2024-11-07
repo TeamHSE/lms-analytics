@@ -52,6 +52,53 @@ interface AssignDisciplineRequest {
 	disciplineId: number;
 }
 
+interface RegisterStudyGroupRequest {
+	program: string;
+	groupNumber: number;
+	admissionYear: number;
+}
+
+interface StudyGroupResponse {
+	id: number;
+	program: string;
+	groupNumber: number;
+	admissionYear: number;
+}
+
+interface RegisterStudentRequest {
+	name: string;
+	surname: string;
+	fatherName: string | null;
+	email: string;
+	studyGroupId: number;
+}
+
+interface StudentResponse {
+	id: number;
+	name: string;
+	surname: string;
+	fatherName: string | null;
+	email: string;
+	studyGroupId: number;
+}
+
+interface UpdateStudyGroupRequest {
+	program?: string;
+	groupNumber?: number;
+	admissionYear?: number;
+}
+
+interface UpdateStudentRequest {
+	name?: string;
+	surname?: string;
+	email?: string;
+}
+
+interface StudentDisciplinesResponse {
+	studentId: number;
+	disciplines: DisciplineResponse[];
+}
+
 export type {
 	AddDisciplineRequest,
 	RegisterManagerRequest,
@@ -61,4 +108,11 @@ export type {
 	RegisterTeacherRequest,
 	UpdateTeacherRequest,
 	AssignDisciplineRequest,
+	RegisterStudyGroupRequest,
+	StudyGroupResponse,
+	RegisterStudentRequest,
+	StudentResponse,
+	UpdateStudyGroupRequest,
+	UpdateStudentRequest,
+	StudentDisciplinesResponse
 };

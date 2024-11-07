@@ -5,7 +5,8 @@ import { Layout, Button, Tabs, Modal, Input, List, notification, Popconfirm } fr
 import LogoutButton from "@/app/lk/LogoutButton";
 import { companyService } from "@/services/company.service";
 import { managerService } from "@/services/manager.service";
-import { TeacherResponse, StudentResponse, Company } from "@/types/manager.types";
+import { TeacherResponse, StudentResponse, StudyGroupResponse } from "@/types/manager.types";
+import Title from "antd/es/typography/Title";
 
 const { Content, Sider } = Layout;
 const { TabPane } = Tabs;
@@ -19,11 +20,13 @@ export default function ManagerPanel() {
 
     const [ teachers, setTeachers ] = useState<TeacherResponse[]>([]);
     const [ students, setStudents ] = useState<StudentResponse[]>([]);
+    const [ groups, setGroups ] = useState<StudyGroupResponse[]>([]);
 
     const [ newSurname, setNewSurname ] = useState<string>("");
     const [ newName, setNewName ] = useState<string>("");
     const [ newLastname, setNewLastname ] = useState<string>("");
     const [ newEmail, setNewEmail ] = useState<string>("");
+    const [ newGroup, setNewGroup ] = useState<StudyGroupResponse | null>(null);
     const [ editId, setEditId ] = useState<number | null>(null);
 
     // Загрузка данных преподавателей и студентов при монтировании компонента
@@ -31,6 +34,7 @@ export default function ManagerPanel() {
         companyService.getCompany(managerOrgId).then(setActiveCompany);
         loadTeachers();
         loadStudents();
+        loadGroups();
     }, []);
 
     const loadTeachers = async () => {
@@ -41,6 +45,11 @@ export default function ManagerPanel() {
     const loadStudents = async () => {
         const studentList = await managerService.getStudents(managerOrgId, 1);
         setStudents(studentList);
+    };
+
+    const loadGroups = async () => {
+        const groupList = await managerService.getStudyGroups(managerOrgId, 1);
+        setGroups(groupList);
     };
 
     const handleAddPerson = async () => {
@@ -61,11 +70,12 @@ export default function ManagerPanel() {
                         name: newName,
                         fatherName: newLastname,
                         email: newEmail,
+                        studyGroupId: 1, // todo
                     });
                     setStudents([ ...students, newPerson ]);
                 }
                 notification.success({ message: `Новый ${ newType === "teacher" ? "преподаватель" : "студент" } успешно добавлен` });
-            } catch (error) {
+            } catch (error: any) {
                 notification.error({
                     message: `Ошибка при добавлении ${ newType === "teacher" ? "преподавателя" : "студента" }`,
                     description: error?.message ?? "Неизвестная ошибка",
@@ -88,11 +98,11 @@ export default function ManagerPanel() {
                     let updatedTeacher = await managerService.updateTeacher(1, managerOrgId, editId, updatedPerson);
                     setTeachers(teachers.map(t => t.id === editId ? { ...t, ...updatedTeacher } : t));
                 } else {
-                    await managerService.updateStudent(managerOrgId, editId, updatedPerson);
-                    setStudents(students.map(s => s.id === editId ? { ...s, ...updatedPerson } : s));
+                    let updatedStudent = await managerService.updateStudent(managerOrgId, editId, editId, updatedPerson);
+                    setStudents(students.map(s => s.id === editId ? { ...s, ...updatedStudent } : s));
                 }
                 notification.success({ message: `${ newType === "teacher" ? "Преподаватель" : "Студент" } успешно обновлен` });
-            } catch (error) {
+            } catch (error: any) {
                 notification.error({
                     message: `Ошибка при редактировании ${ newType === "teacher" ? "преподавателя" : "студента" }`,
                     description: error?.message ?? "Неизвестная ошибка",
@@ -101,15 +111,28 @@ export default function ManagerPanel() {
             resetModal();
         }
     };
-    
+
     const handleDeleteTeacher = async (teacherId: number) => {
         try {
             await managerService.deleteTeacher(managerOrgId, 1, teacherId);
             setTeachers(teachers.filter(t => t.id !== teacherId));
             notification.success({ message: "Преподаватель успешно удален" });
-        } catch (error) {
+        } catch (error: any) {
             notification.error({
                 message: "Ошибка при удалении преподавателя",
+                description: error?.message ?? "Неизвестная ошибка",
+            });
+        }
+    };
+    
+    const handleDeleteStudent = async (studentId: number) => {
+        try {
+            await managerService.deleteStudent(managerOrgId, 1, studentId);
+            setStudents(students.filter(s => s.id !== studentId));
+            notification.success({ message: "Студент успешно удален" });
+        } catch (error: any) {
+            notification.error({
+                message: "Ошибка при удалении студента",
                 description: error?.message ?? "Неизвестная ошибка",
             });
         }
@@ -121,7 +144,7 @@ export default function ManagerPanel() {
         setEditId(person.id);
         setNewSurname(person.surname);
         setNewName(person.name);
-        setNewLastname(person.fatherName);
+        setNewLastname(person.fatherName ?? "");
         setNewEmail(person.email);
         setIsModalVisible(true);
     };
@@ -183,6 +206,7 @@ export default function ManagerPanel() {
                                                 bordered
                                         />
                                     </TabPane>
+                                    
                                     <TabPane tab="Студенты" key="students">
                                         <Button
                                                 type="primary"
@@ -239,6 +263,21 @@ export default function ManagerPanel() {
                            onChange={ (e) => setNewLastname(e.target.value) } style={ { marginBottom: "1rem" } }/>
                     <Input placeholder="Email" value={ newEmail } onChange={ (e) => setNewEmail(e.target.value) }
                            style={ { marginBottom: "1rem" } }/>
+                    { newType === "student" && (
+                            // header for list
+                            <>
+                                <Title level={ 5 }>Выберите группу</Title>
+                                <List
+                                        dataSource={ groups }
+                                        renderItem={ (group) => (
+                                                <List.Item onClick={ () => setNewGroup(group) }
+                                                           style={ { cursor: "pointer" } }>
+                                                    { `${ group.program } ${ group.groupNumber } (${ group.admissionYear })` }
+                                                </List.Item>
+                                        ) }
+                                        bordered style={ { marginBottom: "1rem" } }/>
+                            </>
+                    ) }
                 </Modal>
             </Layout>
     );

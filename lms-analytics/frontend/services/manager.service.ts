@@ -4,9 +4,9 @@ import {
 	AssignDisciplineRequest,
 	DisciplineResponse,
 	ManagerResponse,
-	RegisterManagerRequest,
-	RegisterTeacherRequest,
-	TeacherResponse,
+	RegisterManagerRequest, RegisterStudentRequest, RegisterStudyGroupRequest,
+	RegisterTeacherRequest, StudentDisciplinesResponse, StudentResponse, StudyGroupResponse,
+	TeacherResponse, UpdateStudentRequest, UpdateStudyGroupRequest,
 	UpdateTeacherRequest,
 } from '@/types/manager.types';
 
@@ -71,6 +71,74 @@ class ManagerService {
 
 	async unassignDisciplineFromTeacher(companyId: number, managerId: number, teacherId: number, disciplineId: number) {
 		await client.delete(`${companyId}/managers/${managerId}/teachers/${teacherId}/disciplines/${disciplineId}`);
+	}
+
+	async getStudyGroups(companyId: number, managerId: number) {
+		const response = await client.get<StudyGroupResponse[]>(`${ companyId }/managers/${ managerId }/student-groups`);
+		return response.data;
+	}
+	
+	async registerStudyGroup(companyId: number, managerId: number, request: RegisterStudyGroupRequest) {
+		const response = await client.post<StudyGroupResponse>(`${ companyId }/managers/${ managerId }/student-groups`, request);
+		return response.data;
+	}
+	
+	async getStudyGroup(companyId: number, managerId: number, studyGroupId: number) {
+		const response = await client.get<StudyGroupResponse>(`${ companyId }/managers/${ managerId }/student-groups/${ studyGroupId }`);
+		return response.data;
+	}
+	
+	async updateStudyGroup(companyId: number, managerId: number, studyGroupId: number, request: UpdateStudyGroupRequest) {
+		const response = await client.put<StudyGroupResponse>(`${ companyId }/managers/${ managerId }/student-groups/${ studyGroupId }`, request);
+		return response.data;
+	}
+	
+	async deleteStudyGroup(companyId: number, managerId: number, studyGroupId: number) {
+		await client.delete(`${ companyId }/managers/${ managerId }/student-groups/${ studyGroupId }`);
+	}
+	
+	async getStudents(companyId: number, managerId: number) {
+		const response = await client.get<StudentResponse[]>(`${ companyId }/managers/${ managerId }/students`);
+		return response.data;
+	}
+	
+	async registerStudent(companyId: number, managerId: number, request: RegisterStudentRequest) {
+		const response = await client.post<StudentResponse>(`${ companyId }/managers/${ managerId }/students`, request);
+		return response.data;
+	}
+	
+	async getStudent(companyId: number, managerId: number, studentId: number) {
+		const response = await client.get<StudentResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }`);
+		return response.data;
+	}
+	
+	async updateStudent(companyId: number, managerId: number, studentId: number, request: UpdateStudentRequest) {
+		const response = await client.put<StudentResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }`, request);
+		return response.data;
+	}
+	
+	async deleteStudent(companyId: number, managerId: number, studentId: number) {
+		await client.delete(`${ companyId }/managers/${ managerId }/students/${ studentId }`);
+	}
+	
+	async assignStudentToGroup(companyId: number, managerId: number, studentId: number, studyGroupId: number) {
+		const response = await client.post<StudentResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }/student-groups/${ studyGroupId }`);
+		return response.data;
+	}
+	
+	async assignDisciplineToStudent(companyId: number, managerId: number, studentId: number, request: AssignDisciplineRequest) {
+		const response =await client.post<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`, request);
+		return response.data;
+	}
+	
+	async getStudentDisciplines(companyId: number, managerId: number, studentId: number) {
+		const response = await client.get<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`);
+		return response.data;
+	}
+	
+	async unassignDisciplineFromStudent(companyId: number, managerId: number, studentId: number, disciplineId: number) {
+		const response = await client.delete<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines/${ disciplineId }`);
+		return response.data;
 	}
 }
 
