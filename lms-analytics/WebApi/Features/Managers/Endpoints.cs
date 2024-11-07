@@ -392,7 +392,7 @@ public static class Endpoints
 	{
 		var students = await dbContext.Students.Where(x => x.CompanyId == companyId).ToListAsync();
 
-		return Results.Ok(students.Select(x => new StudentResponse(x.Id, x.Name, x.Surname, x.Email, x.StudyGroupId)));
+		return Results.Ok(students.Select(x => new StudentResponse(x.Id, x.Name, x.Surname, x.FatherName, x.Email, x.StudyGroupId)));
 	}
 
 	private static async Task<IResult> RegisterStudent(
@@ -424,7 +424,7 @@ public static class Endpoints
 
 		return Results.Created(
 			$"students/{student.Id}",
-			new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+			new StudentResponse(student.Id, student.Name, student.Surname, student.FatherName, student.Email, student.StudyGroupId));
 	}
 
 	private static async Task<IResult> GetStudent(
@@ -439,7 +439,7 @@ public static class Endpoints
 			return Results.NotFound();
 		}
 
-		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.FatherName, student.Email, student.StudyGroupId));
 	}
 
 	private static async Task<IResult> UpdateStudent(
@@ -461,7 +461,7 @@ public static class Endpoints
 
 		await dbContext.SaveChangesAsync();
 
-		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.FatherName, student.Email, student.StudyGroupId));
 	}
 
 	private static async Task<IResult> DeleteStudent(
@@ -504,7 +504,7 @@ public static class Endpoints
 		var student = manager.AssignStudentToGroup(studentId, studyGroupId);
 		await dbContext.SaveChangesAsync();
 
-		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.Email, student.StudyGroupId));
+		return Results.Ok(new StudentResponse(student.Id, student.Name, student.Surname, student.FatherName, student.Email, student.StudyGroupId));
 	}
 
 	private static async Task<IResult> AssignDisciplineToStudent(
@@ -586,7 +586,7 @@ public static class Endpoints
 
 	private sealed record RegisterStudentRequest([MaxLength(255)] string Name, [MaxLength(255)] string Surname, [MaxLength(255)] string? FatherName, [EmailAddress] string Email, int StudyGroupId);
 
-	private sealed record StudentResponse(int Id, string Name, string Surname, string Email, int StudyGroupId);
+	private sealed record StudentResponse(int Id, string Name, string Surname, string? FatherName, string Email, int StudyGroupId);
 
 	private sealed record UpdateStudyGroupRequest([MaxLength(255)] string? Program, int? GroupNumber, int? AdmissionYear);
 
