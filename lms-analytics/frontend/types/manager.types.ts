@@ -42,10 +42,10 @@ interface RegisterTeacherRequest {
 }
 
 interface UpdateTeacherRequest {
-	name?: string;
-	surname?: string;
+	name: string | null;
+	surname: string | null;
 	fatherName: string | null;
-	email?: string;
+	email: string | null;
 }
 
 interface AssignDisciplineRequest {
@@ -54,14 +54,14 @@ interface AssignDisciplineRequest {
 
 interface RegisterStudyGroupRequest {
 	program: string;
-	groupNumber: number;
+	groupNumber: string;
 	admissionYear: number;
 }
 
 interface StudyGroupResponse {
 	id: number;
 	program: string;
-	groupNumber: number;
+	groupNumber: string;
 	admissionYear: number;
 }
 
@@ -83,15 +83,15 @@ interface StudentResponse {
 }
 
 interface UpdateStudyGroupRequest {
-	program?: string;
-	groupNumber?: number;
-	admissionYear?: number;
+	program: string | null;
+	groupNumber: string | null;
+	admissionYear: number | null;
 }
 
 interface UpdateStudentRequest {
-	name?: string;
-	surname?: string;
-	email?: string;
+	name: string | null;
+	surname: string | null;
+	email: string | null;
 }
 
 interface StudentDisciplinesResponse {
