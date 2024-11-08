@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { List, Button, Modal, Input, Tabs, Select } from "antd";
 import { feedbackService } from "@/services/feedback.service";
-import { studentService } from "@/services/student.service";
+import { managerService } from "@/services/manager.service";
+import { StudentResponse } from "@/types/manager.types";
 
 const { TabPane } = Tabs;
 
@@ -17,7 +18,7 @@ const FeedbackPage = () => {
 	const [ sentFeedbacks, setSentFeedbacks ] = useState<any[]>([]);
 
 	useEffect(() => {
-		studentService.getStudents().then((students) => setStudents(students));
+		managerService.getStudents(1, 1).then((students) => setStudents(students));
 		feedbackService.getFeedbacksForTeacher(TEACHER_ID).then((feedbacks) => setReceivedFeedbacks(feedbacks));
 		feedbackService.getFeedbacksFromTeacher(TEACHER_ID).then((feedbacks) => setSentFeedbacks(feedbacks));
 	}, []);
@@ -37,6 +38,10 @@ const FeedbackPage = () => {
 		}
 	};
 
+    function getStudentName(student: StudentResponse) {
+        return `${ student.surname } ${ student.name } ${ student.fatherName || "" }`;
+    }
+
 	return (
 		<>
 			<h1>Обратная связь</h1>
@@ -49,7 +54,7 @@ const FeedbackPage = () => {
 						renderItem={ item => (
 							<List.Item>
 								<strong>
-									{ studentService.getStudentName(students.find(student => student.id === item.senderId)) }:
+									{ getStudentName(students.find(student => student.id === item.senderId)) }:
 								</strong> { item.text }
 							</List.Item>
 						) }
@@ -63,16 +68,18 @@ const FeedbackPage = () => {
 						renderItem={ item => (
 							<List.Item>
 								<strong>
-									{ studentService.getStudentName(students.find(student => student.id === item.receiverId)) }:
+									{ getStudentName(students.find(student => student.id === item.receiverId)) }:
 								</strong> { item.text }
 							</List.Item>
 						) }
 					/>
+                    <Button type="primary"
+                            onClick={ () => setIsModalVisible(true) }
+                            style={ { marginTop: "2%" } }>
+                        Отправить обратную связь
+                    </Button>
 				</TabPane>
 			</Tabs>
-			<Button type="primary" onClick={ () => setIsModalVisible(true) } style={ { top: "1%" } }>
-				Отправить обратную связь
-			</Button>
 			<Modal
 				title="Отправить обратную связь"
 				open={ isModalVisible }
@@ -94,7 +101,7 @@ const FeedbackPage = () => {
 					onChange={ (value) => setSelectedStudentId(value) }
 					options={ students.map((student) => ({
 						value: student.id,
-						label: studentService.getStudentName(student),
+						label: getStudentName(student),
 					})) }
 				>
 				</Select>
