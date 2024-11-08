@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { List, Card, Progress, Button, Modal, DatePicker } from "antd";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend } from "recharts";
 import * as StudentStats from "@/app/lk/student/Stats";
+import { StudentResponse, StudyGroupResponse } from "@/types/manager.types";
+import { managerService } from "@/services/manager.service";
 
 interface StatsPanelProps {
-    selectedGroup?: StudentGroup | null;
+    selectedGroup?: StudyGroupResponse | null;
 }
 
 export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
     const [ isModalVisible, setIsModalVisible ] = useState<boolean>(false);
-    const [ selectedStudent, setSelectedStudent ] = useState<string | null>(null);
+    const [ selectedStudent, setSelectedStudent ] = useState<StudentResponse | null>(null);
+    const [ students, setStudents ] = useState<StudentResponse[]>([]);
     const [ barChartData, setBarChartData ] = useState([
         { subject: "Математика", averageGrade: 4.5 },
         { subject: "Физика", averageGrade: 3.8 },
@@ -27,11 +30,15 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
         attendanceRate: Math.random() * 100,
     });
 
+    useEffect(() => {
+        managerService.getStudents(1, 1).then((students) => setStudents(students));
+    }, []);
+
     const handleUploadGrades = () => {
         handleDateChange();
     };
 
-    const showModal = (student: string) => {
+    const showModal = (student: StudentResponse) => {
         setSelectedStudent(student);
         setIsModalVisible(true);
     };
@@ -73,7 +80,7 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
     return (
             <>
                 { selectedGroup ? (
-                        <Card title={ `Статистика для ${ selectedGroup.name }` }>
+                        <Card title={ `Статистика для ${ selectedGroup.groupNumber }` }>
                             <p>Средняя оценка группы:</p>
                             <Progress
                                     percent={ (groupStats.averageGrade / 5) * 100 }
@@ -88,17 +95,17 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
                                     type="primary"
                                     style={ { marginTop: "16px" } }
                                     onClick={ handleUploadGrades }
-                                    disabled={ selectedGroup.students.length === 0 }
+                                    disabled={ students.length === 0 }
                             >
                                 Загрузить оценки
                             </Button>
                             <Card title="Список учеников" style={ { marginTop: "16px" } }>
                                 <List
-                                        dataSource={ selectedGroup.students }
+                                        dataSource={ students }
                                         renderItem={ (student) => (
                                                 <List.Item onClick={ () => showModal(student) }
                                                            style={ { cursor: "pointer" } }>
-                                                    { student }
+                                                    { student.surname } { student.name } | { student.email }
                                                 </List.Item>
                                         ) }
                                         bordered
@@ -133,7 +140,7 @@ export default function StatsPanel({ selectedGroup }: StatsPanelProps) {
                 ) }
 
                 <Modal
-                        title={ `${ selectedStudent } - Статистика` }
+                        title={ `${ selectedStudent?.surname } ${ selectedStudent?.name } - Статистика` }
                         open={ isModalVisible }
                         onCancel={ handleModalClose }
                         footer={ null }

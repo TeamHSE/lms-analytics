@@ -1,27 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
 import LogoutButton from "@/app/lk/LogoutButton";
 import StatsPanel from "@/app/lk/teacher/Stats";
 import FeedbackPanel from "@/app/lk/teacher/Feedback";
+import { StudyGroupResponse, TeacherResponse } from "@/types/manager.types";
+import { managerService } from "@/services/manager.service";
 
 const { Sider, Content } = Layout;
 
 const TeacherPage = () => {
-    const [ selectedGroup, setSelectedGroup ] = useState<StudentGroup | null>(null);
+    const [ selectedGroup, setSelectedGroup ] = useState<StudyGroupResponse | null>(null);
     const [ feedbackOpened, setOpenedFeedback ] = useState<boolean>(false);
 
-    const teacherInfo: TeacherInfo = {
-        fullName: "Иванов И.И.",
-        organization: "Государственный университет",
-    };
+    const [ teacherInfo, setTeacherInfo ] = useState<TeacherResponse | null>(null);
+    const [ studentGroups, setStudentGroups ] = useState<StudyGroupResponse[]>([]);
 
-    const studentGroups: StudentGroup[] = [
-        { id: 1, name: "Группа А", students: [ "Иванов И.И.", "Петров П.П.", "Сидоров С.С." ] },
-        { id: 2, name: "Группа Б", students: [ "Алексеев А.А.", "Кузнецов К.К." ] },
-        { id: 3, name: "Группа В", students: [ "Смирнова С.С.", "Романова Р.Р.", "Новиков Н.Н." ] },
-    ];
+    useEffect(() => {
+        managerService.getTeacher(1, 1, 1).then((teacher) => setTeacherInfo(teacher));
+        managerService.getStudyGroups(1, 1).then((groups) => setStudentGroups(groups));
+    }, []);
 
     return <>
         <Layout style={ { minHeight: "100vh" } }>
@@ -33,7 +32,7 @@ const TeacherPage = () => {
                                 setSelectedGroup(group);
                                 setOpenedFeedback(false);
                             } }>
-                                { group.name }
+                                { group.program } { group.groupNumber }
                             </Menu.Item>
                     )) }
                 </Menu>
@@ -46,8 +45,8 @@ const TeacherPage = () => {
             </Sider>
             <Layout>
                 <Content style={ { padding: "24px", paddingTop: "0" } }>
-                    <h1>{ teacherInfo.organization }</h1>
-                    <h2>{ teacherInfo.fullName }<LogoutButton position="relative" margin={ 5 } width={ "10%" }/></h2>
+                    <h1>{ teacherInfo?.surname } { teacherInfo?.name }</h1>
+                    <h2>{ teacherInfo?.email }<LogoutButton position="relative" margin={ 5 } width={ "10%" }/></h2>
                     { feedbackOpened
                             ? <FeedbackPanel/>
                             : <StatsPanel selectedGroup={ selectedGroup }/> }
