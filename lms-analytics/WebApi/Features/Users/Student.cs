@@ -4,14 +4,14 @@ using WebApi.Features.Managers;
 
 namespace WebApi.Features.Users;
 
-public class Student(string name, string surname, string? fatherName, string email, int studyGroupId)
+public class Student(string name, string surname, string? fatherName, string email, int studyGroupId, int companyId)
 	: User(name, surname, fatherName, email), ICanShareFeedback
 {
 	public int StudyGroupId { get; internal set; } = studyGroupId;
 
 	public StudyGroup StudyGroup { get; private set; } = null!;
 
-	public int CompanyId { get; private init; }
+	public int CompanyId { get; private init; } = companyId;
 
 	public Company Company { get; private init; } = null!;
 

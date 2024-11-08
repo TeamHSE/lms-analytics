@@ -411,10 +411,10 @@ public static class Endpoints
 			return Results.NotFound();
 		}
 
-		var isValidStudent = string.IsNullOrWhiteSpace(request.Name) ||
-							 string.IsNullOrWhiteSpace(request.Surname) ||
-							 string.IsNullOrWhiteSpace(request.Email);
-		if (isValidStudent)
+		var isValidStudent = !string.IsNullOrWhiteSpace(request.Name) &&
+							 !string.IsNullOrWhiteSpace(request.Surname) &&
+							 !string.IsNullOrWhiteSpace(request.Email);
+		if (!isValidStudent)
 		{
 			return Results.BadRequest("Некорректные данные студента");
 		}

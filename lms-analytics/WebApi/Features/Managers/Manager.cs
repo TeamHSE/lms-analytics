@@ -46,7 +46,7 @@ public class Manager : User
 	public Student RegisterStudent(string name, string surname, string? fatherName, string email, int studyGroupId)
 	{
 		var group = StudyGroups.Single(g => g.Id == studyGroupId);
-		var student = new Student(name, surname, fatherName, email, studyGroupId);
+		var student = new Student(name, surname, fatherName, email, studyGroupId, CompanyId);
 		group.Students.Add(student);
 		return student;
 	}
