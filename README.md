@@ -41,5 +41,4 @@
 7. Надеюсь всё получилось)
 
 ### Скринкаст (демо)
-_Музыка на фоне на любителя, предупреждаем)_
-https://disk.yandex.ru/i/kKw4FFzuw3JZiQ
+[Ссылка](https://disk.yandex.ru/i/qCXgHnFMMv6YJA)
