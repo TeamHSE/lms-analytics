@@ -15,6 +15,6 @@ export interface Feedback {
 }
 
 export enum FeedbackPersonType {
-	Student = 1,
-	Teacher = 2,
+	Student = "Student",
+	Teacher = "Teacher",
 }

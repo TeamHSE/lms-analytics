@@ -15,99 +15,129 @@ interface FeedbackPageProps {
 const FeedbackPage = ({ student }: FeedbackPageProps) => {
     const [ isModalVisible, setIsModalVisible ] = useState<boolean>(false);
     const [ feedbackText, setFeedbackText ] = useState<string>("");
-    const [ selectedRecipient, setSelectedRecipient ] = useState<TeacherResponse | StudentResponse | undefined>(undefined);
+    const [ selectedRecipientId, setSelectedRecipientId ] = useState<number | undefined>(undefined);
+
     const [ recipientType, setRecipientType ] = useState<string>("teacher");
 
-    const [ receivedFeedback, setReceivedFeedback ] = useState<Feedback[]>([]);
-    const [ feedbackToTeachers, setFeedbackToTeachers ] = useState<Feedback[]>([]);
-    const [ peerFeedback, setPeerFeedback ] = useState<Feedback[]>([]);
+    const [ receivedFeedback, setReceivedFeedback ] = useState<(Feedback & { senderName: string })[]>([]);
+    const [ feedbackToTeachers, setFeedbackToTeachers ] = useState<(Feedback & { receiverName: string })[]>([]);
+    const [ peerFeedback, setPeerFeedback ] = useState<(Feedback & { receiverName: string })[]>([]);
 
     const [ teachers, setTeachers ] = useState<TeacherResponse[]>([]);
     const [ classmates, setClassmates ] = useState<StudentResponse[]>([]);
 
-    const fetchReceivedFeedback = async () => {
-        if (student === undefined) {
-            return;
-        }
+    const fetchData = async () => {
+        if (!student) return;
 
-        feedbackService.getFeedbacksForStudent(student?.id).then((feedbacks) => setReceivedFeedback(feedbacks));
-    };
+        const [
+            feedbacks,
+            studentFeedbacks,
+            teacherFeedbacks,
+            disciplines,
+            studyGroup,
+            allStudents,
+        ] = await Promise.all([
+            feedbackService.getFeedbacksForStudent(student.id),
+            feedbackService.getFeedbacksFromStudent(student.id).then((f) =>
+                    f.filter((feedback) => feedback.receiverType === FeedbackPersonType.Student)),
+            feedbackService.getFeedbacksFromStudent(student.id).then((f) =>
+                    f.filter((feedback) => feedback.receiverType === FeedbackPersonType.Teacher),
+            ),
+            managerService.getStudentDisciplines(1, 1, student.id),
+            managerService.getStudyGroup(1, 1, student.studyGroupId),
+            managerService.getStudents(1, 1),
+        ]);
 
-    const fetchFeedbackToTeachers = async () => {
-        if (student === undefined) {
-            return;
-        }
+        const receivedFeedback = await Promise.all(
+                feedbacks.map(async (feedback) => {
+                    const senderName =
+                            feedback.senderType === FeedbackPersonType.Student
+                                    ? await managerService
+                                            .getStudent(1, 1, feedback.senderId)
+                                            .then((student) => `${ student?.name } ${ student?.surname } (ученик)`)
+                                    : await managerService
+                                            .getTeacher(1, 1, feedback.senderId)
+                                            .then((teacher) => `${ teacher?.name } ${ teacher?.surname } (преподаватель)`);
+                    return { ...feedback, senderName };
+                }),
+        );
 
-        feedbackService.getFeedbacksFromStudent(student?.id)
-                .then((feedbacks) =>
-                        feedbacks.filter((feedback) => feedback.receiverType === FeedbackPersonType.Teacher))
-                .then((feedbacks) => setFeedbackToTeachers(feedbacks));
-    };
+        const feedbackToTeachers = await Promise.all(
+                teacherFeedbacks.map(async (feedback) => {
+                    const receiverName = await managerService
+                            .getTeacher(1, 1, feedback.receiverId)
+                            .then((teacher) => `${ teacher?.name } ${ teacher?.surname }`);
+                    return { ...feedback, receiverName };
+                }),
+        );
 
-    const fetchPeerFeedback = async () => {
-        if (student === undefined) {
-            return;
-        }
+        const peerFeedback = await Promise.all(
+                studentFeedbacks.map(async (feedback) => {
+                    const receiverName = await managerService
+                            .getStudent(1, 1, feedback.receiverId)
+                            .then((student) => `${ student?.name } ${ student?.surname }`);
+                    return { ...feedback, receiverName };
+                }),
+        );
 
-        feedbackService.getFeedbacksFromStudent(student?.id)
-                .then((feedbacks) =>
-                        feedbacks.filter((feedback) => feedback.receiverType === FeedbackPersonType.Student))
-                .then((feedbacks) => setPeerFeedback(feedbacks));
-    };
+        const disciplineIds = disciplines.disciplines.map((discipline) => discipline.id);
+        const teachers = await managerService.getTeachersForDisciplines(1, 1, disciplineIds);
 
-    const fetchTeachersToSendFeedback = async () => {
-        if (student === undefined) {
-            return;
-        }
+        const classmates = allStudents.filter(
+                (classmate) => classmate.studyGroupId === studyGroup.id,
+        );
 
-        managerService.getStudentDisciplines(1, 1, student?.id).then((studentWithDisciplines) => {
-            const disciplineIds = studentWithDisciplines.disciplines.map((discipline) => discipline.id);
-            managerService.getTeachersForDisciplines(1, 1, disciplineIds).then((teachers) => setTeachers(teachers));
-        });
-    };
-
-    const fetchClassmatesToSendFeedback = async () => {
-        if (student === undefined) {
-            return;
-        }
-
-        managerService.getStudyGroup(1, 1, student?.studyGroupId).then((studyGroup) => {
-            managerService.getStudents(1, 1).then((students) => {
-                const classmates = students.filter((student) => student.studyGroupId === studyGroup.id);
-                setClassmates(classmates);
-            });
-        });
+        setReceivedFeedback(receivedFeedback);
+        setFeedbackToTeachers(feedbackToTeachers);
+        setPeerFeedback(peerFeedback);
+        setTeachers(teachers);
+        setClassmates(classmates);
     };
 
     useEffect(() => {
-        fetchReceivedFeedback();
-        fetchFeedbackToTeachers();
-        fetchPeerFeedback();
-        fetchTeachersToSendFeedback();
-        fetchClassmatesToSendFeedback();
-    }, []);
+        fetchData();
+    }, [ student ]);
 
     const handleSendFeedback = async () => {
-        if (selectedRecipient) {
-            if (recipientType === "teacher" && student) {
-                const sentFeedback = await feedbackService.addStudentTeacherFeedback({
-                    senderId: student?.id,
-                    receiverId: selectedRecipient.id,
-                    text: feedbackText,
-                });
-                setFeedbackToTeachers([ ...feedbackToTeachers, sentFeedback ]);
-            } else if (recipientType === "student" && student) {
-                const sentFeedback = await feedbackService.addXStudentFeedback({
-                    senderId: student?.id,
-                    receiverId: selectedRecipient.id,
-                    text: feedbackText,
-                });
-                setPeerFeedback([ ...peerFeedback, sentFeedback ]);
-            }
+        if (selectedRecipientId) {
+            const selectedRecipient =
+                    recipientType === "teacher"
+                            ? teachers.find((teacher) => teacher.id === selectedRecipientId)
+                            : classmates.find((classmate) => classmate.id === selectedRecipientId);
 
-            setIsModalVisible(false);
-            setFeedbackText("");
-            setSelectedRecipient(undefined);
+            if (selectedRecipient && student) {
+                if (recipientType === "teacher") {
+                    const sentFeedback = await feedbackService.addStudentTeacherFeedback({
+                        senderId: student.id,
+                        receiverId: selectedRecipient.id,
+                        text: feedbackText,
+                    });
+                    setFeedbackToTeachers([
+                        ...feedbackToTeachers,
+                        {
+                            ...sentFeedback,
+                            receiverName: `${ selectedRecipient.name } ${ selectedRecipient.surname }`,
+                        },
+                    ]);
+                } else {
+                    const sentFeedback = await feedbackService.addXStudentFeedback({
+                        senderId: student.id,
+                        receiverId: selectedRecipient.id,
+                        text: feedbackText,
+                    });
+                    setPeerFeedback([
+                        ...peerFeedback,
+                        {
+                            ...sentFeedback,
+                            receiverName: `${ selectedRecipient.name } ${ selectedRecipient.surname }`,
+                        },
+                    ]);
+                }
+
+                setIsModalVisible(false);
+                setFeedbackText("");
+                setSelectedRecipientId(undefined);
+            }
         }
     };
 
@@ -121,12 +151,7 @@ const FeedbackPage = ({ student }: FeedbackPageProps) => {
                                 bordered
                                 dataSource={ receivedFeedback }
                                 renderItem={ item => (
-                                        <List.Item key={ item.id }>
-                                            <strong>{
-                                                item.senderType === FeedbackPersonType.Student
-                                                        ? managerService.getStudent(1, 1, item.senderId).then((student) => student?.name + " " + student?.surname + " (ученик)")
-                                                        : managerService.getTeacher(1, 1, item.senderId).then((teacher) => teacher?.name + " " + teacher?.surname + " (преподаватель)")
-                                            }:</strong> { item.text }
+                                        <List.Item key={ item.id }><strong>{ item.senderName }:</strong> { item.text }
                                         </List.Item>
                                 ) }
                         />
@@ -138,9 +163,7 @@ const FeedbackPage = ({ student }: FeedbackPageProps) => {
                                 dataSource={ feedbackToTeachers }
                                 renderItem={ item => (
                                         <List.Item key={ item.id }>
-                                            <strong>{ managerService.getTeacher(1, 1, item.senderId)
-                                                    .then((teacher) => teacher?.name + " " + teacher?.surname) }
-                                                | </strong> { item.text }
+                                            <strong>{ item.receiverName } | </strong> { item.text }
                                         </List.Item>
                                 ) }
                         />
@@ -152,9 +175,7 @@ const FeedbackPage = ({ student }: FeedbackPageProps) => {
                                 dataSource={ peerFeedback }
                                 renderItem={ item => (
                                         <List.Item key={ item.id }>
-                                            <strong>{
-                                                managerService.getStudent(1, 1, item.senderId).then((student) => student?.name + " " + student?.surname)
-                                            } | </strong> { item.text }
+                                            <strong>{ item.receiverName } | </strong> { item.text }
                                         </List.Item>
                                 ) }
                         />
@@ -190,11 +211,11 @@ const FeedbackPage = ({ student }: FeedbackPageProps) => {
                             <Select
                                     style={ { width: "100%", marginTop: "16px" } }
                                     placeholder="Выберите получателя"
-                                    value={ selectedRecipient }
-                                    onChange={ (value) => setSelectedRecipient(value) }
+                                    value={ selectedRecipientId }
+                                    onChange={ (value) => setSelectedRecipientId(value) }
                             >
                                 { teachers.map((teacher) => (
-                                        <Select.Option value={ teacher.id }>
+                                        <Select.Option key={ teacher.id } value={ teacher.id }>
                                             { teacher.name } { teacher.surname }
                                         </Select.Option>
                                 )) }
@@ -203,14 +224,13 @@ const FeedbackPage = ({ student }: FeedbackPageProps) => {
                             <Select
                                     style={ { width: "100%", marginTop: "16px" } }
                                     placeholder="Выберите получателя"
-                                    value={ selectedRecipient }
-                                    onChange={ (value) => setSelectedRecipient(value) }
+                                    value={ selectedRecipientId }
+                                    onChange={ (value) => setSelectedRecipientId(value) }
                             >
                                 { classmates.map((classmate) => (
-                                        <Select.Option value={ classmate.id }>
+                                        <Select.Option key={ classmate.id } value={ classmate.id }>
                                             { classmate.name } { classmate.surname }
-                                        </Select.Option>
-                                )) }
+                                        </Select.Option>)) }
                             </Select>
                     ) }
                 </Modal>

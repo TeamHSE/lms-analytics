@@ -39,7 +39,7 @@ const FeedbackPage = () => {
 	};
 
     function getStudentName(student: StudentResponse) {
-        return `${ student.surname } ${ student.name } ${ student.fatherName || "" }`;
+        return `${ student?.surname } ${ student?.name } ${ student?.fatherName || "" }`;
     }
 
 	return (

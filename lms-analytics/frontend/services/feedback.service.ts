@@ -1,5 +1,6 @@
 import { API_CONSTANTS } from "@/constants/api.constants";
 import { client } from "@/api/interceptors";
+import { Feedback, SendFeedbackRequest } from '@/types/feedback.types';
 
 class FeedbackService {
 	async addTeacherStudentFeedback(request: SendFeedbackRequest) {
