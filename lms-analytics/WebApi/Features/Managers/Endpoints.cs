@@ -17,6 +17,7 @@ public static class Endpoints
 		managersApi.MapGet("/disciplines", GetAllDisciplines);
 		managersApi.MapPost("/", RegisterManager);
 		managersApi.MapPost("/{managerId:int}/disciplines", AddDiscipline);
+		managersApi.MapGet("/{managerId:int}/disciplines/teachers", GetTeachersForDisciplines);
 
 		var teachersApi = managersApi.MapGroup("{managerId:int}/teachers");
 		teachersApi.MapGet("/", GetTeachers);
@@ -49,6 +50,31 @@ public static class Endpoints
 		studentDisciplinesApi.MapPost("/", AssignDisciplineToStudent);
 		studentDisciplinesApi.MapGet("/", GetStudentDisciplines);
 		studentDisciplinesApi.MapDelete("{disciplineId:int}", UnassignDisciplineFromStudent);
+	}
+
+	private static async Task<IResult> GetTeachersForDisciplines(
+		[FromServices] AppDbContext dbContext,
+		[FromRoute] int companyId,
+		[FromRoute] int managerId,
+		[FromQuery] [MaxLength(100)] int[] disciplineIds)
+	{
+		var manager = await dbContext.Managers
+			.Include(x => x.Company)
+			.SingleOrDefaultAsync(x => x.Id == managerId);
+		if (manager is null || manager.CompanyId != companyId)
+		{
+			return Results.NotFound();
+		}
+
+		var teachers = await dbContext.Teachers
+			.Where(x => x.CompanyId == companyId)
+			.Include(x => x.Disciplines)
+			.Where(x => x.Disciplines.Any(d => disciplineIds.Contains(d.Id)))
+			.Select(x => new TeacherResponse(x.Id, x.Name, x.Surname, x.FatherName, x.Email, x.CompanyId))
+			.Distinct()
+			.ToListAsync();
+
+		return Results.Ok(teachers);
 	}
 
 	private static async Task<IResult> AddDiscipline(
