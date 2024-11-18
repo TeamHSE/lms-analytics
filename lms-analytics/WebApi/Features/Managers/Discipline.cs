@@ -18,4 +18,6 @@ public class Discipline(string name, int companyId)
 	public List<Student> Students { get; private init; } = [];
 
 	public List<Teacher> Teachers { get; private init; } = [];
+
+	public List<Manager> Managers { get; private init; } = [];
 }
