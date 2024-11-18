@@ -5,7 +5,12 @@ import { Layout, Button, Tabs, Modal, Input, List, notification, Dropdown, Menu,
 import LogoutButton from "@/app/lk/LogoutButton";
 import { companyService } from "@/services/company.service";
 import { managerService } from "@/services/manager.service";
-import { TeacherResponse, StudentResponse, StudyGroupResponse } from "@/types/manager.types";
+import {
+    TeacherResponse,
+    StudentResponse,
+    StudyGroupResponse,
+    StudentDisciplinesResponse, DisciplineResponse,
+} from "@/types/manager.types";
 import { DownOutlined } from "@ant-design/icons";
 
 const { Content, Sider } = Layout;
@@ -43,11 +48,16 @@ export default function ManagerPanel() {
     const [ newGroupAdmissionYear, setNewGroupAdmissionYear ] = useState<number>(currentYear);
     const years = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i);
 
+    const [ isManageStudentDisciplinesModalVisible, setIsManageStudentDisciplinesModalVisible ] = useState<boolean>(false);
+    const [ studentDisciplines, setStudentDisciplines ] = useState<DisciplineResponse[]>([]);
+    const [ disciplines, setDisciplines ] = useState<DisciplineResponse[]>([]);
+
     useEffect(() => {
         companyService.getCompany(managerOrgId).then(setActiveCompany);
         loadTeachers();
         loadStudents();
         loadGroups();
+        loadDisciplines();
     }, []);
 
     const loadTeachers = async () => {
@@ -63,6 +73,11 @@ export default function ManagerPanel() {
     const loadGroups = async () => {
         const groupList = await managerService.getStudyGroups(managerOrgId, 1);
         setGroups(groupList);
+    };
+
+    const loadDisciplines = async () => {
+        const disciplineList = await managerService.getAllDisciplines(1);
+        setDisciplines(disciplineList);
     };
 
     // Обработчики для преподавателей
@@ -205,6 +220,49 @@ export default function ManagerPanel() {
         setIsModalVisible(true);
     };
 
+    const manageStudentDisciplinesModal = async (student: StudentResponse) => {
+        setEditId(student.id);
+        const studentDisciplines = await managerService.getStudentDisciplines(1, managerOrgId, student.id);
+        setStudentDisciplines(studentDisciplines.disciplines);
+        setIsManageStudentDisciplinesModalVisible(true);
+    };
+
+    const closeManageStudentDisciplinesModal = () => {
+        setIsManageStudentDisciplinesModalVisible(false);
+    };
+
+    const attachStudentToDiscipline = async (discipline: DisciplineResponse) => {
+        try {
+            if (studentDisciplines.some(d => d.id === discipline.id)) {
+                notification.error({ message: "Дисциплина уже прикреплена" });
+                return;
+            }
+            const updated = await managerService.assignDisciplineToStudent(1, managerOrgId, editId!, {
+                disciplineId: discipline.id,
+            });
+            setStudentDisciplines(updated.disciplines);
+            notification.success({ message: "Дисциплина успешно добавлена" });
+        } catch (error: any) {
+            notification.error({
+                message: "Ошибка при добавлении дисциплины",
+                description: error?.message ?? "Неизвестная ошибка",
+            });
+        }
+    };
+
+    const detachStudentFromDiscipline = async (disciplineId: number) => {
+        try {
+            const updated = await managerService.unassignDisciplineFromStudent(1, managerOrgId, editId!, disciplineId);
+            setStudentDisciplines(updated.disciplines);
+            notification.success({ message: "Дисциплина успешно откреплена" });
+        } catch (error: any) {
+            notification.error({
+                message: "Ошибка при откреплении дисциплины",
+                description: error?.message ?? "Неизвестная ошибка",
+            });
+        }
+    };
+
     return (
             <Layout style={ { minHeight: "100vh" } }>
                 <Sider width={ 200 } className="site-layout-background" theme="light">
@@ -225,7 +283,8 @@ export default function ManagerPanel() {
                                                 <List.Item
                                                         actions={ [
                                                             <Button type="link"
-                                                                    onClick={ () => openEditTeacherModal(teacher) }>Редактировать</Button>,
+                                                                    onClick={ () => openEditTeacherModal(teacher) }>Редактировать
+                                                                                                                    данные</Button>,
                                                         ] }
                                                 >
                                                     <List.Item.Meta
@@ -246,6 +305,9 @@ export default function ManagerPanel() {
                                                         actions={ [
                                                             <Button type="link"
                                                                     onClick={ () => openEditStudentModal(student) }>Редактировать</Button>,
+                                                            <Button type="link"
+                                                                    onClick={ () => manageStudentDisciplinesModal(student) }>Управлять
+                                                                                                                             дисциплинами</Button>,
                                                         ] }
                                                 >
                                                     <List.Item.Meta
@@ -258,7 +320,7 @@ export default function ManagerPanel() {
                             </TabPane>
                         </Tabs>
 
-                        {/* Модальное окно */ }
+                        {/* Модальное окно для добавления/редактирования преподавателя/студента */ }
                         <Modal
                                 title={ modalMode === "add" ? `Добавить ${ newType === "teacher" ? "преподавателя" : "студента" }` : `Редактировать ${ newType === "teacher" ? "преподавателя" : "студента" }` }
                                 visible={ isModalVisible }
@@ -268,38 +330,90 @@ export default function ManagerPanel() {
                             { newType === "teacher" ? (
                                     <div>
                                         <Input placeholder="Фамилия" value={ newTeacherSurname }
-                                               onChange={ (e) => setNewTeacherSurname(e.target.value) }/>
+                                               onChange={ (e) => setNewTeacherSurname(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Имя" value={ newTeacherName }
-                                               onChange={ (e) => setNewTeacherName(e.target.value) }/>
+                                               onChange={ (e) => setNewTeacherName(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Отчество" value={ newTeacherLastname }
-                                               onChange={ (e) => setNewTeacherLastname(e.target.value) }/>
+                                               onChange={ (e) => setNewTeacherLastname(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Email" value={ newTeacherEmail }
-                                               onChange={ (e) => setNewTeacherEmail(e.target.value) }/>
+                                               onChange={ (e) => setNewTeacherEmail(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                     </div>
                             ) : (
                                     <div>
                                         <Input placeholder="Фамилия" value={ newStudentSurname }
-                                               onChange={ (e) => setNewStudentSurname(e.target.value) }/>
+                                               onChange={ (e) => setNewStudentSurname(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Имя" value={ newStudentName }
-                                               onChange={ (e) => setNewStudentName(e.target.value) }/>
+                                               onChange={ (e) => setNewStudentName(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Отчество" value={ newStudentLastname }
-                                               onChange={ (e) => setNewStudentLastname(e.target.value) }/>
+                                               onChange={ (e) => setNewStudentLastname(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Input placeholder="Email" value={ newStudentEmail }
-                                               onChange={ (e) => setNewStudentEmail(e.target.value) }/>
+                                               onChange={ (e) => setNewStudentEmail(e.target.value) }
+                                               style={ { marginBottom: "1rem" } }/>
                                         <Dropdown
-                                                overlay={ <Menu>
-                                                    { groups.map(group => (
-                                                            <Menu.Item key={ group.id }
-                                                                       onClick={ () => setNewStudentGroup(group) }>
-                                                                { group.program } { group.groupNumber }
-                                                            </Menu.Item>
-                                                    )) }
-                                                </Menu> }
+                                                menu={ {
+                                                    onClick: (e) => setNewStudentGroup(groups.find(group => group.id === Number(e.key)) || null),
+                                                    items: groups.map(group => ({
+                                                        key: group.id,
+                                                        value: group.id,
+                                                        label: group.program + " " + group.groupNumber + " " + group.admissionYear,
+                                                    })),
+                                                } }
                                         >
-                                            <Button>Выберите группу <DownOutlined/></Button>
+                                            {
+                                                newStudentGroup
+                                                        ? <Button>{ newStudentGroup.program + " " +
+                                                                newStudentGroup.groupNumber + " " +
+                                                                newStudentGroup.admissionYear }</Button>
+                                                        : <Button>Выберите группу</Button>
+                                            }
                                         </Dropdown>
                                     </div>
                             ) }
+                        </Modal>
+
+                        {/* Модальное окно для управления дисциплинами студента */ }
+                        <Modal
+                                title="Управление дисциплинами студента"
+                                visible={ isManageStudentDisciplinesModalVisible }
+                                onOk={ closeManageStudentDisciplinesModal }
+                                onCancel={ closeManageStudentDisciplinesModal }
+                                cancelButtonProps={ { style: { display: "none", visibility: "hidden" } } }
+                        >
+                            <List
+                                    itemLayout="horizontal"
+                                    dataSource={ studentDisciplines }
+                                    renderItem={ (studentsDiscipline) => (
+                                            <List.Item
+                                                    actions={ [
+                                                        <Button type="link"
+                                                                onClick={ () => detachStudentFromDiscipline(studentsDiscipline.id) }>Открепить</Button>,
+                                                    ] }
+                                            >
+                                                <List.Item.Meta
+                                                        title={ studentsDiscipline.name }
+                                                />
+                                            </List.Item>
+                                    ) }
+                            />
+                            <Dropdown
+                                    overlay={ <Menu>
+                                        { disciplines.map(discipline => (
+                                                <Menu.Item key={ discipline.id }
+                                                           onClick={ () => attachStudentToDiscipline(discipline) }>
+                                                    { discipline.name }
+                                                </Menu.Item>
+                                        )) }
+                                    </Menu> }
+                            >
+                                <Button>Прикрепить к дисциплине <DownOutlined/></Button>
+                            </Dropdown>
                         </Modal>
                     </Content>
                 </Layout>
