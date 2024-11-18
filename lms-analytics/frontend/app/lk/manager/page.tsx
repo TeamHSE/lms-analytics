@@ -9,7 +9,7 @@ import {
     TeacherResponse,
     StudentResponse,
     StudyGroupResponse,
-    StudentDisciplinesResponse, DisciplineResponse,
+    DisciplineResponse,
 } from "@/types/manager.types";
 import { DownOutlined } from "@ant-design/icons";
 
@@ -50,6 +50,10 @@ export default function ManagerPanel() {
 
     const [ isManageStudentDisciplinesModalVisible, setIsManageStudentDisciplinesModalVisible ] = useState<boolean>(false);
     const [ studentDisciplines, setStudentDisciplines ] = useState<DisciplineResponse[]>([]);
+
+    const [ isManageTeacherDisciplinesModalVisible, setIsManageTeacherDisciplinesModalVisible ] = useState<boolean>(false);
+    const [ teacherDisciplines, setTeacherDisciplines ] = useState<DisciplineResponse[]>([]);
+
     const [ disciplines, setDisciplines ] = useState<DisciplineResponse[]>([]);
 
     useEffect(() => {
@@ -263,6 +267,49 @@ export default function ManagerPanel() {
         }
     };
 
+    const manageTeacherDisciplinesModal = async (teacher: TeacherResponse) => {
+        setEditId(teacher.id);
+        const teacherDisciplines = await managerService.getTeacherDisciplines(1, managerOrgId, teacher.id);
+        setTeacherDisciplines(teacherDisciplines);
+        setIsManageTeacherDisciplinesModalVisible(true);
+    };
+
+    const closeManageTeacherDisciplinesModal = () => {
+        setIsManageTeacherDisciplinesModalVisible(false);
+    };
+
+    const attachTeacherToDiscipline = async (discipline: DisciplineResponse) => {
+        try {
+            if (teacherDisciplines.some(d => d.id === discipline.id)) {
+                notification.error({ message: "Дисциплина уже прикреплена" });
+                return;
+            }
+            await managerService.assignDisciplineToTeacher(1, managerOrgId, editId!, {
+                disciplineId: discipline.id,
+            });
+            setTeacherDisciplines([ ...teacherDisciplines, discipline ]);
+            notification.success({ message: "Дисциплина успешно добавлена" });
+        } catch (error: any) {
+            notification.error({
+                message: "Ошибка при добавлении дисциплины",
+                description: error?.message ?? "Неизвестная ошибка",
+            });
+        }
+    };
+
+    const detachTeacherFromDiscipline = async (disciplineId: number) => {
+        try {
+            await managerService.unassignDisciplineFromTeacher(1, managerOrgId, editId!, disciplineId);
+            setTeacherDisciplines(teacherDisciplines.filter(d => d.id !== disciplineId));
+            notification.success({ message: "Дисциплина успешно откреплена" });
+        } catch (error: any) {
+            notification.error({
+                message: "Ошибка при откреплении дисциплины",
+                description: error?.message ?? "Неизвестная ошибка",
+            });
+        }
+    };
+
     return (
             <Layout style={ { minHeight: "100vh" } }>
                 <Sider width={ 200 } className="site-layout-background" theme="light">
@@ -283,8 +330,13 @@ export default function ManagerPanel() {
                                                 <List.Item
                                                         actions={ [
                                                             <Button type="link"
-                                                                    onClick={ () => openEditTeacherModal(teacher) }>Редактировать
-                                                                                                                    данные</Button>,
+                                                                    onClick={ () => openEditTeacherModal(teacher) }>
+                                                                Редактировать данные
+                                                            </Button>,
+                                                            <Button type="link"
+                                                                    onClick={ () => manageTeacherDisciplinesModal(teacher) }>
+                                                                Управлять дисциплинами
+                                                            </Button>,
                                                         ] }
                                                 >
                                                     <List.Item.Meta
@@ -415,6 +467,45 @@ export default function ManagerPanel() {
                                 <Button>Прикрепить к дисциплине <DownOutlined/></Button>
                             </Dropdown>
                         </Modal>
+
+                        {/* Модальное окно для управления дисциплинами преподавателя */ }
+                        <Modal
+                                title="Управление дисциплинами преподавателя"
+                                visible={ isManageTeacherDisciplinesModalVisible }
+                                onOk={ () => setIsManageTeacherDisciplinesModalVisible(false) }
+                                onCancel={ () => setIsManageTeacherDisciplinesModalVisible(false) }
+                                cancelButtonProps={ { style: { display: "none", visibility: "hidden" } } }
+                        >
+                            <List
+                                    itemLayout="horizontal"
+                                    dataSource={ teacherDisciplines }
+                                    renderItem={ (teachersDiscipline) => (
+                                            <List.Item
+                                                    actions={ [
+                                                        <Button type="link"
+                                                                onClick={ () => detachTeacherFromDiscipline(teachersDiscipline.id) }>Открепить</Button>,
+                                                    ] }
+                                            >
+                                                <List.Item.Meta
+                                                        title={ teachersDiscipline.name }
+                                                />
+                                            </List.Item>
+                                    ) }
+                            />
+                            <Dropdown
+                                    overlay={ <Menu>
+                                        { disciplines.map(discipline => (
+                                                <Menu.Item key={ discipline.id }
+                                                           onClick={ () => attachTeacherToDiscipline(discipline) }>
+                                                    { discipline.name }
+                                                </Menu.Item>
+                                        )) }
+                                    </Menu> }
+                            >
+                                <Button>Прикрепить к дисциплине <DownOutlined/></Button>
+                            </Dropdown>
+                        </Modal>
+
                     </Content>
                 </Layout>
             </Layout>
