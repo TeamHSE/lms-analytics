@@ -65,20 +65,4 @@ public class Manager : User
 		group.Students.Add(student);
 		return student;
 	}
-
-	public Discipline[] AssignDisciplineToStudent(int studentId, int disciplineId)
-	{
-		var student = StudyGroups.SelectMany(g => g.Students).Single(s => s.Id == studentId);
-		var discipline = Disciplines.Single(d => d.Id == disciplineId);
-		student.Disciplines.Add(discipline);
-		return student.Disciplines.ToArray();
-	}
-
-	public Discipline[] UnassignDisciplineFromStudent(int studentId, int disciplineId)
-	{
-		var student = StudyGroups.SelectMany(g => g.Students).Single(s => s.Id == studentId);
-		var discipline = Disciplines.Single(d => d.Id == disciplineId);
-		student.Disciplines.Remove(discipline);
-		return student.Disciplines.ToArray();
-	}
 }

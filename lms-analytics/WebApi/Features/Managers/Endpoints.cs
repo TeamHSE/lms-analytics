@@ -514,24 +514,25 @@ public static class Endpoints
 		[FromRoute] int studentId,
 		[FromBody] AssignDisciplineRequest request)
 	{
-		var manager = await dbContext.Managers
-			.Include(x => x.StudyGroups)
-			.ThenInclude(x => x.Students)
-			.ThenInclude(x => x.Disciplines)
-			.SingleOrDefaultAsync(x => x.Id == managerId);
-		if (manager is null)
+		var manager = await dbContext.Managers.SingleOrDefaultAsync(x => x.Id == managerId);
+		var company = await dbContext.Companies.SingleOrDefaultAsync(x => x.Id == companyId);
+		var student = await dbContext.Students.SingleOrDefaultAsync(x => x.Id == studentId);
+		var discipline = await dbContext.Disciplines.SingleOrDefaultAsync(x => x.Id == request.DisciplineId);
+		if (manager is null || company is null || student is null || discipline is null)
 		{
 			return Results.NotFound();
 		}
 
-		var studentDisciplines = manager.AssignDisciplineToStudent(studentId, request.DisciplineId);
+		await dbContext.Entry(student).Collection(x => x.Disciplines).LoadAsync();
+		student.AssignDiscipline(discipline);
+
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(
 			new
 			{
 				studentId,
-				disciplines = studentDisciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
+				disciplines = student.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
 			});
 	}
 
@@ -549,7 +550,12 @@ public static class Endpoints
 			return Results.NotFound();
 		}
 
-		return Results.Ok(student.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)));
+		return Results.Ok(
+			new
+			{
+				studentId,
+				disciplines = student.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
+			});
 	}
 
 	private static async Task<IResult> UnassignDisciplineFromStudent(
@@ -559,24 +565,24 @@ public static class Endpoints
 		[FromRoute] int studentId,
 		[FromRoute] int disciplineId)
 	{
-		var manager = await dbContext.Managers
-			.Include(x => x.StudyGroups)
-			.ThenInclude(x => x.Students)
-			.ThenInclude(x => x.Disciplines)
-			.SingleOrDefaultAsync(x => x.Id == managerId);
-		if (manager is null)
+		var manager = await dbContext.Managers.SingleOrDefaultAsync(x => x.Id == managerId);
+		var company = await dbContext.Companies.SingleOrDefaultAsync(x => x.Id == companyId);
+		var student = await dbContext.Students.SingleOrDefaultAsync(x => x.Id == studentId);
+		if (manager is null || company is null || student is null)
 		{
 			return Results.NotFound();
 		}
 
-		var studentDisciplines = manager.UnassignDisciplineFromStudent(studentId, disciplineId);
+		await dbContext.Entry(student).Collection(x => x.Disciplines).LoadAsync();
+		student.Unassign(student.Disciplines.Single(x => x.Id == disciplineId));
+
 		await dbContext.SaveChangesAsync();
 
 		return Results.Ok(
 			new
 			{
 				studentId,
-				disciplines = studentDisciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
+				disciplines = student.Disciplines.Select(x => new DisciplineResponse(x.Id, x.Name, x.CompanyId)),
 			});
 	}
 
