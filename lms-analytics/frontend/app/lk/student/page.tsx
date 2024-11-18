@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
 import LogoutButton from "@/app/lk/LogoutButton";
 import StatsPage from "./Stats";
 import FeedbackPage from "./Feedback";
+import { StudentResponse } from "@/types/manager.types";
+import { managerService } from "@/services/manager.service";
 
 const { Sider, Content } = Layout;
 
 export default function StudentPanel() {
     const [ feedbackOpened, setOpenedFeedback ] = useState<boolean>(false);
-    const studentName: string = "Иванов Иван Иванович";
+    const [ student, setStudent ] = useState<StudentResponse>();
+
+    const fetchStudent = async () => {
+        managerService.getStudent(1, 1, 1).then((student) => setStudent(student));
+    };
+
+    useEffect(() => {
+        fetchStudent();
+    }, []);
 
     return (
             <>
@@ -29,12 +39,12 @@ export default function StudentPanel() {
                     <Layout>
                         <Content style={ { padding: "24px", paddingRight: "1%" } }>
                             <h1 style={ { margin: "0px" } }>
-                                Ученик: { studentName }
+                                Ученик: { student?.surname } { student?.name }
                                 <LogoutButton position="relative" width="10%"/>
                             </h1>
                             { feedbackOpened
-                                    ? <FeedbackPage/>
-                                    : <StatsPage/> }
+                                    ? <FeedbackPage student={ student }/>
+                                    : <StatsPage student={ student }/> }
                         </Content>
                     </Layout>
                 </Layout>

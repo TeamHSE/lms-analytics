@@ -1,10 +1,10 @@
-interface SendFeedbackRequest {
+export interface SendFeedbackRequest {
 	senderId: number;
 	receiverId: number;
 	text: string;
 }
 
-interface Feedback {
+export interface Feedback {
 	id: number;
 	senderId: number;
 	receiverId: number;
@@ -14,7 +14,7 @@ interface Feedback {
 	receiverType: FeedbackPersonType;
 }
 
-enum FeedbackPersonType {
+export enum FeedbackPersonType {
 	Student = 1,
 	Teacher = 2,
 }
