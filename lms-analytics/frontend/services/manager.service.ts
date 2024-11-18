@@ -127,17 +127,17 @@ class ManagerService {
 	}
 	
 	async assignDisciplineToStudent(companyId: number, managerId: number, studentId: number, request: AssignDisciplineRequest) {
-		const response =await client.post<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`, request);
+		const response = await client.post<StudentDisciplinesResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`, request);
 		return response.data;
 	}
 	
 	async getStudentDisciplines(companyId: number, managerId: number, studentId: number) {
-		const response = await client.get<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`);
+		const response = await client.get<StudentDisciplinesResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines`);
 		return response.data;
 	}
 	
 	async unassignDisciplineFromStudent(companyId: number, managerId: number, studentId: number, disciplineId: number) {
-		const response = await client.delete<StudentDisciplinesResponse[]>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines/${ disciplineId }`);
+		const response = await client.delete<StudentDisciplinesResponse>(`${ companyId }/managers/${ managerId }/students/${ studentId }/disciplines/${ disciplineId }`);
 		return response.data;
 	}
 }
